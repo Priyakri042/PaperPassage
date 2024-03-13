@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "689589782059",
+    "firebase_url": "https://bookrent-18af7-default-rtdb.firebaseio.com",
+    "project_id": "bookrent-18af7",
+    "storage_bucket": "bookrent-18af7.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:689589782059:android:88400dd19bd0ba59f90c6e",
+        "android_client_info": {
+          "package_name": "com.example.kitaab"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDiIQriJE320HNdpmFA6UJRmTz83QaoUFQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
