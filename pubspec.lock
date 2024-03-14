@@ -347,6 +347,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_vector_icons:
+    dependency: "direct main"
+    description:
+      name: flutter_vector_icons
+      sha256: "20a77e282f8cb438c8edcee4eec85d8497d5f4cbeb07d116e9d2d01c9edfc5e2"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.0"
   flutter_web_plugins:
     dependency: transitive
     description: flutter
@@ -360,6 +368,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "10.7.0"
+  google_fonts:
+    dependency: "direct main"
+    description:
+      name: google_fonts
+      sha256: b1ac0fe2832c9cc95e5e88b57d627c5e68c223b9657f4b96e1487aa9098c7b82
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.2.1"
   google_identity_services_web:
     dependency: transitive
     description:
@@ -632,6 +648,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.0"
+  page_transition:
+    dependency: "direct main"
+    description:
+      name: page_transition
+      sha256: dee976b1f23de9bbef5cd512fe567e9f6278caee11f5eaca9a2115c19dc49ef6
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.1.0"
   path:
     dependency: "direct main"
     description:
@@ -736,6 +760,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.1.2"
+  pull_to_refresh:
+    dependency: "direct main"
+    description:
+      name: pull_to_refresh
+      sha256: bbadd5a931837b57739cf08736bea63167e284e71fb23b218c8c9a6e042aad12
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.0"
   quiver:
     dependency: transitive
     description:
@@ -1031,4 +1063,4 @@ packages:
     version: "6.5.0"
 sdks:
   dart: ">=3.3.0 <4.0.0"
-  flutter: ">=3.19.0"
+  flutter: ">=3.19.2"

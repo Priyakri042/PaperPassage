@@ -18,6 +18,8 @@ class Checkout extends StatelessWidget {
             }
           },
         ),
+                   backgroundColor: Colors.brown[200],
+
         centerTitle: true,
       ),
       body: 

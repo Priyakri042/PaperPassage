@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -45,6 +46,7 @@ class _SettingsState extends State<Settings> {
     prefs = await SharedPreferences.getInstance();
     name = prefs!.getString('name');
     email = prefs!.getString('email');
+    
     return {
       'name': name!,
       'email': email!,
@@ -59,421 +61,467 @@ class _SettingsState extends State<Settings> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: LayoutBuilder(
-          builder: (BuildContext context, BoxConstraints constraints) {
-            if (constraints.maxWidth > 600) {
-              return const Text('Settings');
-            } else {
-              return const Text('Settings');
-            }
-          },
-        ),
-        centerTitle: true,
-      ),
-      body:
-          //show profile details
-          Column(
-        children: [
-          Container(
-            color: Colors.grey[200],
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                Stack(
-                  children: [
-                    Container(
-                      height: 100,
-                      width: 100,
-                      padding: const EdgeInsets.fromLTRB(10, 5, 5, 5),
-                      child: FutureBuilder<Map<String, String>>(
-                        future: getUser(),
-                        builder: (BuildContext context,
-                            AsyncSnapshot<Map<String, String>> snapshot) {
-                          //circularprogressindicator while loading
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return const CircularProgressIndicator();
-                          }
-                          return CircleAvatar(
-                            backgroundImage: NetworkImage(
-                              prefs!.getString('profileImageUrl') ??
-                                  'https://www.pngfind.com/pngs/m/610-6104451_image-placeholder-png-user-profile-placeholder-image-png.png',
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      left: 0,
-                      top: 63,
-                      child: IconButton(
-                        icon: const Icon(Icons.camera_alt),
-                        onPressed: () async {
-                          // Make the onPressed callback async
-                          XFile? imageFile = await ImagePicker()
-                              .pickImage(source: ImageSource.gallery);
-                          if (imageFile != null) {
-                            await uploadProfileImage(File(imageFile.path),
-                                prefs!.getString('userId')!);
-                            setState(() {});
-                          }
-                        },
-                      ),
-                    ),
-                  ],
-                ),
+    return WillPopScope(
+      onWillPop: () async {
+        // return to home page
+        navigatorKey.currentState?.pushReplacementNamed('/home');
+        return true;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.black),
+            onPressed: () {
+              navigatorKey.currentState?.pushReplacementNamed('/home');
+            },
+          ),
+          title: LayoutBuilder(
+            builder: (BuildContext context, BoxConstraints constraints) {
+              if (constraints.maxWidth > 600) {
+                return const Text('Profile', style: TextStyle(fontSize: 30, color: Colors.black));
+              } else {
+                return const Text('Profile', style: TextStyle(fontSize: 20, color: Colors.black));
+              }
+            },
+          ),
+                    backgroundColor: Colors.brown[200],
 
-                const SizedBox(
-                  width: 20,
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          centerTitle: true,
+        ),
+        body:
+            //show profile details
+            Column(
+          children: [
+            Card(
+              elevation: 5,
+              shadowColor:            Colors.brown[200],
+
+              child: Container(
+                
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    Text(
-                      'Hello,',
-                      style: TextStyle(
-                        fontSize: 15,
-                      ),
-                    ),
-                    isEnterName
-                        ? Container(
-                            height: 50,
-                            width: 270,
-                            child: TextField(
-                              decoration: InputDecoration(
-                                hintText: 'Enter New Name',
-                                border: UnderlineInputBorder(),
-                                suffixIcon: IconButton(
-                                  icon: Icon(Icons.save),
-                                  onPressed: () async {
-                                    SharedPreferences prefs =
-                                        await SharedPreferences.getInstance();
-                                    prefs.setString(
-                                        'name', _nameController.text);
-                                    setState(() {
-                                      isEnterEmail = false;
-                                      navigatorKey.currentState!
-                                          .pushNamed('/settings');
-                                      //also update the email in the database
-                                      updateData({
-                                        'name': _nameController.text,
-                                      }, 'users', prefs.getString('userId')!);
-                                      isEnterName = false;
-                                    });
-                                  },
-                                ),
-                              ),
-                              controller: _nameController,
-                              keyboardType: TextInputType.text,
-                              enabled: isEnterName,
-                            ),
-                          )
-                        : FutureBuilder<Map<String, String>>(
-                            future: getUser(),
+                    Stack(
+                      children: [
+                        Container(
+                          height: 100,
+                          width: 100,
+                          padding: const EdgeInsets.fromLTRB(10, 5, 5, 5),
+                          child: FutureBuilder<Map<String, dynamic>>(
+                            future: FirebaseFirestore.instance
+                                .collection('users')
+                                .doc(FirebaseAuth.instance.currentUser!.uid)
+                                .get()
+                                .then((value) => value.data()!),
                             builder: (BuildContext context,
-                                AsyncSnapshot<Map<String, String>> snapshot) {
+                                AsyncSnapshot<Map<String, dynamic>> snapshot) {
+                              //circularprogressindicator while loading
                               if (snapshot.connectionState ==
                                   ConnectionState.waiting) {
-                                return const Text('Loading...');
+                                return const LinearProgressIndicator(
+                                  backgroundColor: Colors.brown,
+                                  minHeight: 10,
+                                  
+                                );
                               }
-                              return Text(
-                                snapshot.data!['name']!,
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
+                             if (snapshot.data!['profileImageUrl'] == null) {
+                                return const CircleAvatar(
+                                  radius: 50,
+                                  backgroundImage: AssetImage('assets/images/owl.png'),
+                                );
+                              }
+                              return Stack(
+
+                                children: <Widget>[
+                                  CircleAvatar(
+                                    radius: 80,
+                                    backgroundColor: Colors.brown[800],
+                                  ),
+                                  Positioned(
+                                    top: 2,
+                                    left: 2,
+                                    right: 2,
+                                    bottom: 2,
+                                child: CircleAvatar(
+                                  radius: 40,
+                                  backgroundImage:
+                                      NetworkImage(snapshot.data!['profileImageUrl']),
+                                     
                                 ),
-                              );
+                              ),
+                            ],
+                          );
+                            },
+                          ),
+                        ),
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          left: 0,
+                          top: 63,
+                          child: IconButton(
+                            icon: const Icon(Icons.camera_alt),
+                            onPressed: () async {
+                              setState(() {
+                                 
+                              });
+                              // Make the onPressed callback async
+                              XFile? imageFile = await ImagePicker()
+                                  .pickImage(source: ImageSource.gallery);
+                              if (imageFile != null) {
+                                await uploadProfileImage(File(imageFile.path),
+                                    prefs!.getString('userId')!);
+                                setState(() {});
+                              }
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    
+                    const SizedBox(
+                      width: 20,
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Hello,',
+                          style: TextStyle(
+                            fontSize: 15,
+                          ),
+                        ),
+                        isEnterName
+                            ? Container(
+                                height: 50,
+                                width: 270,
+                                child: TextField(
+                                  decoration: InputDecoration(
+                                    hintText: 'Enter New Name',
+                                    border: UnderlineInputBorder(),
+                                    suffixIcon: IconButton(
+                                      icon: Icon(Icons.save),
+                                      onPressed: () async {
+                                        SharedPreferences prefs =
+                                            await SharedPreferences.getInstance();
+                                        prefs.setString(
+                                            'name', _nameController.text);
+                                        setState(() {
+                                          isEnterEmail = false;
+                                          navigatorKey.currentState!
+                                              .pushNamed('/settings');
+                                          //also update the email in the database
+                                          updateData({
+                                            'name': _nameController.text,
+                                          }, 'users', prefs.getString('userId')!);
+                                          isEnterName = false;
+                                        });
+                                      },
+                                    ),
+                                  ),
+                                  controller: _nameController,
+                                  keyboardType: TextInputType.text,
+                                  enabled: isEnterName,
+                                ),
+                              )
+                            : FutureBuilder<Map<String, String>>(
+                                future: getUser(),
+                                builder: (BuildContext context,
+                                    AsyncSnapshot<Map<String, String>> snapshot) {
+                                  if (snapshot.connectionState ==
+                                      ConnectionState.waiting) {
+                                    return const Text('Loading...');
+                                  }
+                                  return Text(
+                                    snapshot.data!['name']!,
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  );
+                                },
+                              ),
+                      ],
+                    ),
+                    //edit profile button
+                    const Spacer(),
+                    isEnterName
+                        ? Container()
+                        : IconButton(
+                            icon: const Icon(Icons.edit),
+                            onPressed: () {
+                              //navigate to edit profile page
+                              setState(() {
+                                isEnterName = true;
+                              });
                             },
                           ),
                   ],
                 ),
-                //edit profile button
-                const Spacer(),
-                isEnterName
-                    ? Container()
-                    : IconButton(
-                        icon: const Icon(Icons.edit),
-                        onPressed: () {
-                          //navigate to edit profile page
+              ),
+            ),
+            //change email,change phone number,theme,location,change password,logout
+            isEnterEmail
+                ? TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Enter New Email',
+                      labelText: 'Email',
+                      border: OutlineInputBorder(),
+                      suffixIcon: IconButton(
+                        icon: Icon(Icons.save),
+                        onPressed: () async {
+                          SharedPreferences prefs =
+                              await SharedPreferences.getInstance();
+                          prefs.setString('email', _emailController.text);
                           setState(() {
-                            isEnterName = true;
+                            isEnterEmail = false;
+                            navigatorKey.currentState!.pushNamed('/settings');
+                            //also update the email in the database
+                            updateData({
+                              'email': _emailController.text,
+                            }, 'users', prefs.getString('userId')!);
                           });
                         },
                       ),
-              ],
-            ),
-          ),
-          //change email,change phone number,theme,location,change password,logout
-          isEnterEmail
-              ? TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Enter New Email',
-                    labelText: 'Email',
-                    border: OutlineInputBorder(),
-                    suffixIcon: IconButton(
-                      icon: Icon(Icons.save),
-                      onPressed: () async {
-                        SharedPreferences prefs =
-                            await SharedPreferences.getInstance();
-                        prefs.setString('email', _emailController.text);
-                        setState(() {
-                          isEnterEmail = false;
-                          navigatorKey.currentState!.pushNamed('/settings');
-                          //also update the email in the database
-                          updateData({
-                            'email': _emailController.text,
-                          }, 'users', prefs.getString('userId')!);
-                        });
+                    ),
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    enabled: isEnterEmail,
+                  )
+                : ListTile(
+                    leading: const Icon(Icons.email),
+                    title: FutureBuilder<Map<String, String>>(
+                      future: getUser(),
+                      builder: (BuildContext context,
+                          AsyncSnapshot<Map<String, String>> snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const Text('Loading...');
+                        }
+                        return Text(
+                          snapshot.data!['email']!,
+                        );
                       },
                     ),
-                  ),
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  enabled: isEnterEmail,
-                )
-              : ListTile(
-                  leading: const Icon(Icons.email),
-                  title: FutureBuilder<Map<String, String>>(
-                    future: getUser(),
-                    builder: (BuildContext context,
-                        AsyncSnapshot<Map<String, String>> snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Text('Loading...');
-                      }
-                      return Text(
-                        snapshot.data!['email']!,
-                      );
-                    },
-                  ),
-                  trailing: GestureDetector(
-                    onTap: () {
-                      //navigate to change email page
-                      setState(() {
-                        isEnterEmail = true;
-                      });
-                    },
-                    child: const Text(
-                      'Change',
-                      style: TextStyle(color: Colors.blue),
+                    trailing: GestureDetector(
+                      onTap: () {
+                        //navigate to change email page
+                        setState(() {
+                          isEnterEmail = true;
+                        });
+                      },
+                      child:  Text(
+                        'Change',
+                      ),
                     ),
                   ),
-                ),
-          isEnterPhoneNumber
-              ? TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Enter New Phone Number',
-                    labelText: 'Phone Number',
-                    border: OutlineInputBorder(),
-                    suffixIcon: IconButton(
-                      icon: Icon(Icons.save),
-                      onPressed: () async {
-                        SharedPreferences prefs =
-                            await SharedPreferences.getInstance();
-                        prefs.setString(
-                            'phoneNumber', _phoneNumberController.text);
-                        setState(() {
-                          isEnterPhoneNumber = false;
-                          navigatorKey.currentState!.pushNamed('/settings');
-
-                          //also update the phone number in the database
-                          updateData({
-                            'phoneNumber': _phoneNumberController.text,
-                          }, 'users', prefs.getString('userId')!);
+            isEnterPhoneNumber
+                ? TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Enter New Phone Number',
+                      labelText: 'Phone Number',
+                      border: OutlineInputBorder(),
+                      suffixIcon: IconButton(
+                        icon: Icon(Icons.save),
+                        onPressed: () async {
+                          SharedPreferences prefs =
+                              await SharedPreferences.getInstance();
                           prefs.setString(
                               'phoneNumber', _phoneNumberController.text);
-                        });
+                          setState(() {
+                            isEnterPhoneNumber = false;
+                            navigatorKey.currentState!.pushNamed('/settings');
+      
+                            //also update the phone number in the database
+                            updateData({
+                              'phoneNumber': _phoneNumberController.text,
+                            }, 'users', prefs.getString('userId')!);
+                            prefs.setString(
+                                'phoneNumber', _phoneNumberController.text);
+                          });
+                        },
+                      ),
+                    ),
+                    controller: _phoneNumberController,
+                    keyboardType: TextInputType.phone,
+                    enabled: isEnterPhoneNumber,
+                  )
+                : ListTile(
+                    leading: const Icon(Icons.phone),
+                    title: FutureBuilder<Map<String, String>>(
+                      future: getUser(),
+                      builder: (BuildContext context,
+                          AsyncSnapshot<Map<String, String>> snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const Text('Loading...');
+                        }
+      
+                        return Text(
+                          prefs!.getString('phoneNumber') ?? 'Add Phone Number',
+                        );
                       },
                     ),
-                  ),
-                  controller: _phoneNumberController,
-                  keyboardType: TextInputType.phone,
-                  enabled: isEnterPhoneNumber,
-                )
-              : ListTile(
-                  leading: const Icon(Icons.phone),
-                  title: FutureBuilder<Map<String, String>>(
-                    future: getUser(),
-                    builder: (BuildContext context,
-                        AsyncSnapshot<Map<String, String>> snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Text('Loading...');
-                      }
-
-                      return Text(
-                        prefs!.getString('phoneNumber') ?? 'Add Phone Number',
-                      );
-                    },
-                  ),
-                  trailing: GestureDetector(
-                    onTap: () {
-                      //navigate to change phone number page
-                      setState(() {
-                        isEnterPhoneNumber = true;
-                      });
-                    },
-                    child: const Text(
-                      'Change',
-                      style: TextStyle(color: Colors.blue),
-                    ),
-                  )),
-
-          //my uploads
-          ListTile(
-            leading: const Icon(Icons.cloud_upload_rounded),
-            title: const Text('My Uploads'),
-            onTap: () {
-              //navigate to my uploads page
-              Navigator.push(context, MaterialPageRoute(builder: (context) {
-                return const MyUploads();
-              }));
-            },
-            trailing: const Icon(Icons.my_library_books, color: Colors.blue),
-          ),
-
-          isDarkMode
-              ? //show theme options
-
-              ListTile(
-                  leading: const Icon(Icons.palette),
-                  title: const Text('Theme'),
-                  trailing: //a sliding bar to change theme
-                      IconButton(
-                    onPressed: () {
-                      final themeProvider =
-                          Provider.of<ThemeProvider>(context, listen: false);
-                      setState(() {
-                        isDarkMode = !isDarkMode;
-                      }); // change the variable
-
-                      isDarkMode // call the functions
-                          ? themeProvider.setDarkmode()
-                          : themeProvider.setLightMode();
-                    },
-                    icon: const Icon(
-                      Icons.brightness_4_outlined,
-                      color: Colors.blue,
-                    ),
-                  ),
-                )
-              : ListTile(
-                  leading: const Icon(Icons.palette),
-                  title: const Text('Theme'),
-                  trailing: //a sliding bar to change theme
-                      IconButton(
-                    onPressed: () {
-                      final themeProvider =
-                          Provider.of<ThemeProvider>(context, listen: false);
-                      setState(() {
-                        isDarkMode = !isDarkMode;
-                      }); // change the variable
-
-                      isDarkMode // call the functions
-                          ? themeProvider.setDarkmode()
-                          : themeProvider.setLightMode();
-                    },
-                    icon: const Icon(
-                      Icons.brightness_4_outlined,
-                      color: Colors.blue,
-                    ),
-                  ),
-                ),
-          isEnterLocation
-              ? TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Enter New Location',
-                    labelText: 'Location',
-                    border: OutlineInputBorder(),
-                    suffixIcon: IconButton(
-                      icon: Icon(Icons.save),
-                      onPressed: () async {
-                        SharedPreferences prefs =
-                            await SharedPreferences.getInstance();
-                        prefs.setString('location', _locationController.text);
+                    trailing: GestureDetector(
+                      onTap: () {
+                        //navigate to change phone number page
                         setState(() {
-                          isEnterLocation = false;
-                          navigatorKey.currentState!.pushNamed('/settings');
-                          //also update the location in the database
-                          updateData({
-                            'location': _locationController.text,
-                          }, 'users', prefs.getString('userId')!);
+                          isEnterPhoneNumber = true;
                         });
                       },
+                      child:  Text(
+                        'Change',
+                      ),
+                    )),
+      
+            //my uploads
+            ListTile(
+              leading: const Icon(Icons.cloud_upload_rounded),
+              title: const Text('My Uploads',),
+              onTap: () {
+                //navigate to my uploads page
+                Navigator.push(context, MaterialPageRoute(builder: (context) {
+                  return const MyUploads();
+                }));
+              },
+              trailing:  Icon(Icons.my_library_books, ),
+            ),
+      
+            isDarkMode
+                ? //show theme options
+      
+                ListTile(
+                    leading: const Icon(Icons.palette),
+                    title: const Text('Theme'),
+                    trailing: //a sliding bar to change theme
+                        IconButton(
+                      onPressed: () {
+                        final themeProvider =
+                            Provider.of<ThemeProvider>(context, listen: false);
+                        setState(() {
+                          isDarkMode = !isDarkMode;
+                        }); // change the variable
+      
+                        isDarkMode // call the functions
+                            ? themeProvider.setDarkmode()
+                            : themeProvider.setLightMode();
+                      },
+                      icon:  Icon(
+                        Icons.brightness_4_outlined,
+                      ),
+                    ),
+                  )
+                : ListTile(
+                    leading: const Icon(Icons.palette),
+                    title: const Text('Theme'),
+                    trailing: //a sliding bar to change theme
+                        IconButton(
+                      onPressed: () {
+                        final themeProvider =
+                            Provider.of<ThemeProvider>(context, listen: false);
+                        setState(() {
+                          isDarkMode = !isDarkMode;
+                        }); // change the variable
+      
+                        isDarkMode // call the functions
+                            ? themeProvider.setDarkmode()
+                            : themeProvider.setLightMode();
+                      },
+                      icon:  Icon(
+                        Icons.brightness_4_outlined,
+                      ),
                     ),
                   ),
-                  controller: _locationController,
-                  keyboardType: TextInputType.streetAddress,
-                  enabled: isEnterLocation,
-                )
-              : ListTile(
-                  leading: const Icon(Icons.location_on),
-                  title: FutureBuilder<Map<String, String>>(
-                    future: getUser(),
-                    builder: (BuildContext context,
-                        AsyncSnapshot<Map<String, String>> snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Text('Loading...');
-                      }
-                      return Text(
-                        prefs!.getString('location') ?? 'Add Location',
-                      );
-                    },
-                  ),
-                  trailing: GestureDetector(
-                    onTap: () {
-                      //navigate to change location page
-                      setState(() {
-                        isEnterLocation = true;
-                      });
-                    },
-                    child: const Text(
-                      'Change',
-                      style: TextStyle(color: Colors.blue),
+            isEnterLocation
+                ? TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Enter New Location',
+                      labelText: 'Location',
+                      border: OutlineInputBorder(),
+                      suffixIcon: IconButton(
+                        icon: Icon(Icons.save),
+                        onPressed: () async {
+                          SharedPreferences prefs =
+                              await SharedPreferences.getInstance();
+                          prefs.setString('location', _locationController.text);
+                          setState(() {
+                            isEnterLocation = false;
+                            navigatorKey.currentState!.pushNamed('/settings');
+                            //also update the location in the database
+                            updateData({
+                              'location': _locationController.text,
+                            }, 'users', prefs.getString('userId')!);
+                          });
+                        },
+                      ),
+                    ),
+                    controller: _locationController,
+                    keyboardType: TextInputType.streetAddress,
+                    enabled: isEnterLocation,
+                  )
+                : ListTile(
+                    leading: const Icon(Icons.location_on),
+                    title: FutureBuilder<Map<String, String>>(
+                      future: getUser(),
+                      builder: (BuildContext context,
+                          AsyncSnapshot<Map<String, String>> snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const Text('Loading...');
+                        }
+                        return Text(
+                          prefs!.getString('location') ?? 'Add Location',
+                        );
+                      },
+                    ),
+                    trailing: GestureDetector(
+                      onTap: () {
+                        //navigate to change location page
+                        setState(() {
+                          isEnterLocation = true;
+                        });
+                      },
+                      child:  Text(
+                        'Change',
+                      ),
                     ),
                   ),
-                ),
-          isEnterPassword
-              ? TextField(
-                  decoration: const InputDecoration(
-                    hintText: 'Enter New Password',
-                    labelText: 'Password',
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.visiblePassword,
-                  enabled: isEnterPassword,
-                )
-              : ListTile(
-                  leading: const Icon(Icons.lock),
-                  title: const Text('Change Password'),
-                  trailing: GestureDetector(
-                    onTap: () {
-                      //navigate to change password page
-                      setState(() {
-                        isEnterPassword = true;
-                      });
-                    },
-                    child: const Text(
-                      'Change',
-                      style: TextStyle(color: Colors.blue),
+            isEnterPassword
+                ? TextField(
+                    decoration: const InputDecoration(
+                      hintText: 'Enter New Password',
+                      labelText: 'Password',
+                      border: OutlineInputBorder(),
                     ),
-                  )),
-
-          ListTile(
-            leading: const Icon(Icons.logout),
-            title: const Text('Logout'),
-            onTap: () async {
-              SharedPreferences prefs = await SharedPreferences.getInstance();
-              prefs.setBool('isLoggedIn', false);
-              Navigator.pushNamed(context, '/login');
-              //navigate to logout page
-            },
-          ),
-        ],
+                    keyboardType: TextInputType.visiblePassword,
+                    enabled: isEnterPassword,
+                  )
+                : ListTile(
+                    leading: const Icon(Icons.lock),
+                    title: const Text('Change Password'),
+                    trailing: GestureDetector(
+                      onTap: () {
+                        //navigate to change password page
+                        setState(() {
+                          isEnterPassword = true;
+                        });
+                      },
+                      child:  Text(
+                        'Change',
+                      ),
+                    )),
+      
+            ListTile(
+              leading: const Icon(Icons.logout),
+              title: const Text('Logout'),
+              onTap: () async {
+                SharedPreferences prefs = await SharedPreferences.getInstance();
+                prefs.setBool('isLoggedIn', false);
+                Navigator.pushNamed(context, '/login');
+                //navigate to logout page
+              },
+            ),
+          ],
+        ),
+        bottomNavigationBar: bottomAppBar(),
       ),
-      bottomNavigationBar: BtmNavigationBar(),
     );
   }
 }
@@ -487,6 +535,8 @@ class MyUploads extends StatelessWidget {
       appBar: AppBar(
         title: const Text('My Uploads'),
         centerTitle: true,
+          backgroundColor: Colors.brown[400],
+
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
@@ -496,7 +546,10 @@ class MyUploads extends StatelessWidget {
         builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
-              child: CircularProgressIndicator(),
+              child: LinearProgressIndicator(
+                backgroundColor: Colors.brown,
+          
+              ),
             );
           }
           return ListView(
@@ -580,7 +633,7 @@ class MyUploads extends StatelessWidget {
           );
         },
       ),
-      bottomNavigationBar: BtmNavigationBar(),
+      bottomNavigationBar: bottomAppBar(),
     );
   }
 }

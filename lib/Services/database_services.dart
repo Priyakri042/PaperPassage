@@ -55,6 +55,8 @@ Future<void> uploadProfileImage(File imageFile, String userId) async {
       .collection('users')
       .doc(userId)
       .update({'profileImageUrl': downloadUrl});
+
+    prefs.setString('profileImageUrl', downloadUrl);
 }
 
 //book details
@@ -88,4 +90,9 @@ void addBook(
     'description': description,
     'imageUrl': imageUrl,
   });
+}
+
+Future<String> getImage() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  return prefs.getString('profileImageUrl') ?? '';
 }
