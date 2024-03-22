@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:kitaab/Screens/home_page.dart';
 import 'package:kitaab/Services/auth_services.dart';
 import 'package:kitaab/Services/routes.dart';
 import 'package:kitaab/main.dart';
@@ -26,9 +27,6 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
   Future<void> handleGoogleSignIn(UserCredential userCredential) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setBool('isLoggedIn', true);
-    prefs.setString('email', userCredential.user!.email!);
-    prefs.setString('name', userCredential.user!.displayName!);
-    prefs.setString('userId', userCredential.user!.uid);
     DocumentSnapshot userDoc = await FirebaseFirestore.instance
         .collection('users')
         .doc(userCredential.user!.uid)
@@ -55,6 +53,9 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      prefs.setBool('isLoggedIn', true);
+
       return await FirebaseAuth.instance.signInWithCredential(credential);
     } catch (e) {
       print(e);
@@ -62,26 +63,6 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
     }
   }
 
-  Future<void> handleSignInSignUp(UserCredential userCredential) async {
-
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setBool('isLoggedIn', true);
-
-    
-    prefs.setString('email', emailController.text);
-    if (!isSignIn) {
-      prefs.setString('name', nameController.text);
-      prefs.setString('userId', userCredential.user!.uid);
-      FirebaseFirestore.instance
-          .collection('users')
-          .doc(userCredential.user!.uid)
-          .set({
-        'name': nameController.text,
-        'email': emailController.text,
-      });
-    }
-    Navigator.pushReplacementNamed(context, '/home');
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -114,9 +95,13 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
                 controller: emailController,
                 decoration: InputDecoration(labelText: 'Email'),
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
+                  if (value == null ||
+                      value.isEmpty ||
+                      !value.contains('@') ||
+                      !value.contains('.')) {
                     return 'Please enter a valid email';
                   }
+
                   return null;
                 },
               ),
@@ -125,62 +110,88 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
                 decoration: InputDecoration(labelText: 'Password'),
                 obscureText: true,
                 validator: (value) {
+                  if(!isSignIn){
                   if (value == null || value.isEmpty) {
                     return 'Please enter a password';
                   } else if (value.length < 6) {
                     return 'Password must be at least 6 characters long';
                   }
+                  }
                   return null;
                 },
               ),
-              
               SizedBox(height: 20),
               Container(
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () async {
                     if (_formKey.currentState!.validate()) {
-                      if (isSignIn) {
-                        try {
-                          UserCredential userCredential =
-                              await AuthServices.signIn(
-                                  emailController.text, passwordController.text);
-                          await handleSignInSignUp(userCredential);
-                        } on FirebaseAuthException catch (e) {
-                          if (e.code == 'user-not-found') {
-                            errorMessage = 'No user found for that email.';
-                          } else if (e.code == 'wrong-password') {
-                            errorMessage =
-                                'Wrong password provided for that user.';
+                      if (!isSignIn) {
+                        AuthenticationHelper()
+                            .signUp(
+                                email: emailController.text,
+                                password: passwordController.text)
+                            .then((result) async {
+                          if (result == null) {
+                            SharedPreferences prefs = await SharedPreferences.getInstance();
+                            prefs.setString('email', emailController.text);
+                            prefs.setString('name', nameController.text);
+                            prefs.setString('profileImage', '');
+                            prefs.setBool('isLoggedIn', true);
+                            await FirebaseFirestore.instance
+                                .collection('users')
+                                .doc(FirebaseAuth.instance.currentUser!.uid)
+                                .set({
+                              'name': nameController.text,
+                              'email': emailController.text,
+                              'profileImage': '',
+                            });
+                            Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => HomePage()));
+                          } else {
+                            print('error:' + result.toString());
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              content: Text(result.toString()),
+                            ));
                           }
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(errorMessage!),
-                            ),
-                          );
+                        });
+
+                      
+                    } else {
+                      AuthenticationHelper()
+                          .signIn(
+                              email: emailController.text,
+                              password: passwordController.text)
+                          .then((result) async {
+                            print('result: ' + result.toString());
+                        if (result == null) {
+                          print('logged in...');
+                          SharedPreferences prefs = await SharedPreferences.getInstance();
+                          prefs.setBool('isLoggedIn', true);
+                          prefs.setString('email', emailController.text);
+                          print('logged in...');
+                          Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => HomePage()));
+                        } else {
+                          print('error:' + result.toString());
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text(result.toString()),
+                          ));
                         }
-                      } else {
-                        try {
-                          UserCredential userCredential =
-                              await AuthServices.signUp(
-                                  emailController.text, passwordController.text);
-                          await handleSignInSignUp(userCredential);
-                        } on FirebaseAuthException catch (e) {
-                          if (e.code == 'weak-password') {
-                            errorMessage = 'The password provided is too weak.';
-                          } else if (e.code == 'email-already-in-use') {
-                            errorMessage =
-                                'The account already exists for that email.';
-                          }
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(errorMessage!),
-                            ),
-                          );
-                        } catch (e) {
-                          print(e);
-                        }
-                      }
+                      }).catchError(
+                        (e) {
+                          print('error: ' + e.toString());
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text(e.toString()),
+                          ));
+                        },
+                      
+                      );
+                    }
                     }
                   },
                   child: isSignIn ? Text('Sign In') : Text('Sign Up'),
@@ -188,6 +199,7 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
               ),
               TextButton(
                 onPressed: () {
+
                   setState(() {
                     isSignIn = !isSignIn;
                   });
@@ -196,11 +208,10 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
                     ? Text('Don\'t have an account? Sign up')
                     : Text('Already have an account? Sign in'),
               ),
-                Text('or'),
+              Text('or'),
               Container(
                 width: double.infinity,
                 child: ElevatedButton(
-                  
                   onPressed: () async {
                     try {
                       UserCredential userCredential = await signInWithGoogle();
@@ -210,7 +221,6 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
                     }
                   },
                   child: Row(
-                
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Image.network(
@@ -225,9 +235,6 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
                 ),
               ),
             ],
-
-            
-
           ),
         ),
       ),

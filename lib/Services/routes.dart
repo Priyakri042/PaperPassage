@@ -6,7 +6,7 @@ import 'package:kitaab/Screens/Book/new_books.dart';
 import 'package:kitaab/Screens/Cart/cart.dart';
 import 'package:kitaab/Screens/Settings/settings.dart';
 import 'package:kitaab/Screens/History/history.dart';
-import 'package:kitaab/Screens/checkout.dart';
+import 'package:kitaab/Screens/Checkout/checkout.dart';
 import 'package:kitaab/Screens/home_page.dart';
 import 'package:kitaab/Screens/landing_page.dart';
 import 'package:kitaab/Screens/login.dart';

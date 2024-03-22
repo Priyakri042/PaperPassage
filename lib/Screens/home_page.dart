@@ -1,4 +1,5 @@
 // import 'package:firebase_auth/firebase_auth.ropart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -116,10 +117,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<String> getUserName() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? userId = prefs.getString('userId');
-    print(userId);
     //fetch user name from firestore
+    var userId = FirebaseAuth.instance.currentUser!.uid;
     var user = await FirebaseFirestore.instance
         .collection('users')
         .doc(userId)
@@ -189,7 +188,9 @@ class _HomePageState extends State<HomePage> {
                           ),
                           const SizedBox(height: 10),
                           FutureBuilder<String>(
-                            future: getUserName(),
+                            future:  getUserName(
+                              
+                            ),
                             builder: (BuildContext context,
                                 AsyncSnapshot<String> snapshot) {
                               // Check if the Future is resolved
@@ -430,7 +431,7 @@ class _HomePageState extends State<HomePage> {
                 ),
 
                 Container(
-                  height: 270,
+                  height: 278,
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
                   child: GridView.builder(
                     padding: const EdgeInsets.all(3),
@@ -439,15 +440,17 @@ class _HomePageState extends State<HomePage> {
                       crossAxisCount: 2,
                       crossAxisSpacing: 10,
                       mainAxisSpacing: 10,
+                      childAspectRatio: 3/2.1,
                     ),
                     itemCount: categories.length,
                     itemBuilder: (BuildContext context, int index) {
                       String category = categories[index];
                       Image imagePath = images[category]!;
                       return Container(
+
                         decoration: BoxDecoration(
                           image: DecorationImage(
-                            image: imagePath.image,
+                            image: imagePath.image ,
                             fit: BoxFit.cover,
                             colorFilter: ColorFilter.mode(
                                 Colors.black.withOpacity(0.5),
@@ -459,8 +462,7 @@ class _HomePageState extends State<HomePage> {
                           border: Border.all(
                             color: Colors
                                 .brown, // Change this to your desired border color
-                            width:
-                                2, // Change this to your desired border width
+                            width: 2, // Change this to your desired border width
                           ),
 
                           boxShadow: const [

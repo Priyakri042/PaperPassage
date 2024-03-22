@@ -70,26 +70,26 @@ BottomAppBar bottomAppBar() {
             backgroundColor: Colors.brown[200],
 
             //profile image
-            icon: FutureBuilder<String>(
+            icon: FutureBuilder<Image>(
               future: getImage(),
-              builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
+              builder: (BuildContext context, AsyncSnapshot<Image> snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return CircularProgressIndicator(); // or some placeholder
                 } else {
-                  if (snapshot.hasError)
+                  if (snapshot.hasError) {
                     return Icon(Icons.error); // or some error widget
-                  else
-                    return FutureBuilder<String>(
+                  } else {
+                    return FutureBuilder<Image>(
                       future: getImage(),
                       builder: (BuildContext context,
-                          AsyncSnapshot<String> snapshot) {
+                          AsyncSnapshot<Image> snapshot) {
                         if (snapshot.connectionState ==
                             ConnectionState.waiting) {
                           return CircularProgressIndicator(); // or some placeholder
                         } else {
-                          if (snapshot.hasError)
+                          if (snapshot.hasError) {
                             return Icon(Icons.error); // or some error widget
-                          else
+                          } else {
                             return Stack(
                               children: <Widget>[
                                 CircleAvatar(
@@ -103,15 +103,16 @@ BottomAppBar bottomAppBar() {
                                   bottom: 2,
                                   child: CircleAvatar(
                                     radius: 10,
-                                    backgroundImage: NetworkImage(snapshot.data!) ??
-                                      AssetImage('assets/images/owl.png') as ImageProvider,
+                                    backgroundImage: snapshot.data!.image,
                                   ),
                                 ),
                               ],
                             );
+                          }
                         }
                       },
                     );
+                  }
                 }
               },
             ),

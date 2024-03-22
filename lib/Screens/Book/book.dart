@@ -1,4 +1,4 @@
-// ignore_for_file: prefer_const_constructors
+// ignore_for_file: prefer_const_constructors, curly_braces_in_flow_control_structures, sort_child_properties_last
 
 import 'dart:ui';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -265,12 +265,20 @@ class _BookState extends State<Book> {
                         FirebaseFirestore.instance
                             .collection('users')
                             .doc(firebaseAuth.currentUser!.uid)
+                            .collection('cart')
+                            .doc(widget.bid)
                             .set({
-                          'cart': FieldValue.arrayUnion([{'bid':widget.bid,
-                            'isRent': isRent,}])
-                        }, SetOptions(merge: true));
+                              'bid': widget.bid,
+                          'price': await getBookDetails().then(
+                              (value) => value.data()!['price']),
+                          'rentPrice': await getBookDetails().then(
+                              (value) => value.data()!['rentPrice']),
+                          'isRent': isRent,
+                         
+                        });
       
                         //snackbar to show book added to cart
+                        if(mounted){
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text('Book added to cart'),
@@ -279,7 +287,7 @@ class _BookState extends State<Book> {
                           
                         );
                         //pop to home page
-                        Navigator.pop(context);
+                        Navigator.pop(context);}
                       },
                       style: ButtonStyle(
                         backgroundColor:
@@ -339,7 +347,7 @@ class _BookState extends State<Book> {
                                           ),
       
                                           value: isRent ? 'Rent' : 'Buy',
-                                          items: [
+                                          items: const [
                                             DropdownMenuItem(
                                               child: Text(
                                                 'Buy',

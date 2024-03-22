@@ -40,17 +40,22 @@ class _SettingsState extends State<Settings> {
   bool isEnterName = false;
 
   //getImage from the database
+    FirebaseAuth auth = FirebaseAuth.instance;
 
-  Future<Map<String, String>> getUser() async {
+  Future<Map<String, dynamic>> getUser() async {
     //get user details from database
-    prefs = await SharedPreferences.getInstance();
-    name = prefs!.getString('name');
-    email = prefs!.getString('email');
-    
-    return {
-      'name': name!,
-      'email': email!,
-    };
+    User? user = auth.currentUser;
+    DocumentSnapshot documentSnapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user!.uid)
+        .get();
+
+    if (documentSnapshot.exists) {
+      Map<String, dynamic> data = documentSnapshot.data() as Map<String, dynamic>;
+      return data;
+    } else {
+      return {};
+    }
   }
 
   TextEditingController _nameController = TextEditingController();
@@ -107,52 +112,39 @@ class _SettingsState extends State<Settings> {
                           height: 100,
                           width: 100,
                           padding: const EdgeInsets.fromLTRB(10, 5, 5, 5),
-                          child: FutureBuilder<Map<String, dynamic>>(
-                            future: FirebaseFirestore.instance
-                                .collection('users')
-                                .doc(FirebaseAuth.instance.currentUser!.uid)
-                                .get()
-                                .then((value) => value.data()!),
-                            builder: (BuildContext context,
-                                AsyncSnapshot<Map<String, dynamic>> snapshot) {
-                              //circularprogressindicator while loading
-                              if (snapshot.connectionState ==
-                                  ConnectionState.waiting) {
-                                return const LinearProgressIndicator(
-                                  backgroundColor: Colors.brown,
-                                  minHeight: 10,
-                                  
-                                );
-                              }
-                             if (snapshot.data!['profileImageUrl'] == null) {
-                                return const CircleAvatar(
-                                  radius: 50,
-                                  backgroundImage: AssetImage('assets/images/owl.png'),
-                                );
-                              }
-                              return Stack(
-
-                                children: <Widget>[
-                                  CircleAvatar(
-                                    radius: 80,
-                                    backgroundColor: Colors.brown[800],
-                                  ),
-                                  Positioned(
-                                    top: 2,
-                                    left: 2,
-                                    right: 2,
-                                    bottom: 2,
-                                child: CircleAvatar(
-                                  radius: 40,
-                                  backgroundImage:
-                                      NetworkImage(snapshot.data!['profileImageUrl']),
-                                     
+                          child: FutureBuilder<Image>(
+                      future: getImage(),
+                      builder: (BuildContext context,
+                          AsyncSnapshot<Image> snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return CircularProgressIndicator(); // or some placeholder
+                        } else {
+                          if (snapshot.hasError) {
+                            return Icon(Icons.error); // or some error widget
+                          } else {
+                            return Stack(
+                              children: <Widget>[
+                                CircleAvatar(
+                                  radius: 80,
+                                  backgroundColor: Colors.brown[800],
                                 ),
-                              ),
-                            ],
-                          );
-                            },
-                          ),
+                                Positioned(
+                                  top: 2,
+                                  left: 2,
+                                  right: 2,
+                                  bottom: 2,
+                                  child: CircleAvatar(
+                                    radius: 50,
+                                    backgroundImage: snapshot.data!.image,
+                                  ),
+                                ),
+                              ],
+                            );
+                          }
+                        }
+                      },
+                    ),
                         ),
                         Positioned(
                           bottom: 0,
@@ -170,7 +162,7 @@ class _SettingsState extends State<Settings> {
                                   .pickImage(source: ImageSource.gallery);
                               if (imageFile != null) {
                                 await uploadProfileImage(File(imageFile.path),
-                                    prefs!.getString('userId')!);
+                                    FirebaseAuth.instance.currentUser!.uid);
                                 setState(() {});
                               }
                             },
@@ -224,16 +216,16 @@ class _SettingsState extends State<Settings> {
                                   enabled: isEnterName,
                                 ),
                               )
-                            : FutureBuilder<Map<String, String>>(
+                            : FutureBuilder<Map<String, dynamic>>(
                                 future: getUser(),
                                 builder: (BuildContext context,
-                                    AsyncSnapshot<Map<String, String>> snapshot) {
+                                    AsyncSnapshot<Map<String, dynamic>> snapshot) {
                                   if (snapshot.connectionState ==
                                       ConnectionState.waiting) {
                                     return const Text('Loading...');
                                   }
                                   return Text(
-                                    snapshot.data!['name']!,
+                                    snapshot.data!['name']?? 'Add Name',
                                     style: const TextStyle(
                                       fontSize: 20,
                                       fontWeight: FontWeight.bold,
@@ -290,15 +282,15 @@ class _SettingsState extends State<Settings> {
                   )
                 : ListTile(
                     leading: const Icon(Icons.email),
-                    title: FutureBuilder<Map<String, String>>(
+                    title: FutureBuilder<Map<String, dynamic>>(
                       future: getUser(),
                       builder: (BuildContext context,
-                          AsyncSnapshot<Map<String, String>> snapshot) {
+                          AsyncSnapshot<Map<String, dynamic>> snapshot) {
                         if (snapshot.connectionState == ConnectionState.waiting) {
                           return const Text('Loading...');
                         }
                         return Text(
-                          snapshot.data!['email']!,
+                          snapshot.data!['email']?? 'Add Email',
                         );
                       },
                     ),
@@ -334,7 +326,7 @@ class _SettingsState extends State<Settings> {
                             //also update the phone number in the database
                             updateData({
                               'phoneNumber': _phoneNumberController.text,
-                            }, 'users', prefs.getString('userId')!);
+                            }, 'users',auth.currentUser!.uid);
                             prefs.setString(
                                 'phoneNumber', _phoneNumberController.text);
                           });
@@ -347,16 +339,16 @@ class _SettingsState extends State<Settings> {
                   )
                 : ListTile(
                     leading: const Icon(Icons.phone),
-                    title: FutureBuilder<Map<String, String>>(
+                    title: FutureBuilder<Map<String, dynamic>>(
                       future: getUser(),
                       builder: (BuildContext context,
-                          AsyncSnapshot<Map<String, String>> snapshot) {
+                          AsyncSnapshot<Map<String, dynamic>> snapshot) {
                         if (snapshot.connectionState == ConnectionState.waiting) {
                           return const Text('Loading...');
                         }
       
                         return Text(
-                          prefs!.getString('phoneNumber') ?? 'Add Phone Number',
+                          snapshot.data!['phoneNumber']?? 'Add Phone Number',
                         );
                       },
                     ),
@@ -448,7 +440,7 @@ class _SettingsState extends State<Settings> {
                             //also update the location in the database
                             updateData({
                               'location': _locationController.text,
-                            }, 'users', prefs.getString('userId')!);
+                            }, 'users', auth.currentUser!.uid);
                           });
                         },
                       ),
@@ -459,15 +451,15 @@ class _SettingsState extends State<Settings> {
                   )
                 : ListTile(
                     leading: const Icon(Icons.location_on),
-                    title: FutureBuilder<Map<String, String>>(
+                    title: FutureBuilder<Map<String, dynamic>>(
                       future: getUser(),
                       builder: (BuildContext context,
-                          AsyncSnapshot<Map<String, String>> snapshot) {
+                          AsyncSnapshot<Map<String, dynamic>> snapshot) {
                         if (snapshot.connectionState == ConnectionState.waiting) {
                           return const Text('Loading...');
                         }
                         return Text(
-                          prefs!.getString('location') ?? 'Add Location',
+                         snapshot.data!['location']?? 'Add Location',
                         );
                       },
                     ),
