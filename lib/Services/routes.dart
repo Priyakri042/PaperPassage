@@ -2,13 +2,15 @@
 import 'package:flutter/material.dart';
 import 'package:kitaab/Screens/Add/add_book.dart';
 import 'package:kitaab/Screens/Book/book.dart' as bookScreen;
+import 'package:kitaab/Screens/Book/new_books.dart';
 import 'package:kitaab/Screens/Cart/cart.dart';
 import 'package:kitaab/Screens/Settings/settings.dart';
 import 'package:kitaab/Screens/History/history.dart';
-import 'package:kitaab/Screens/checkout.dart';
+import 'package:kitaab/Screens/Checkout/checkout.dart';
 import 'package:kitaab/Screens/home_page.dart';
 import 'package:kitaab/Screens/landing_page.dart';
 import 'package:kitaab/Screens/login.dart';
+import 'package:kitaab/Widgets/search.dart';
 
 Route<dynamic> generateRoute(RouteSettings settings) {
   switch (settings.name) {
@@ -32,7 +34,14 @@ Route<dynamic> generateRoute(RouteSettings settings) {
     case '/checkout':
       return MaterialPageRoute(builder: (context) => Checkout());
 
+      case '/newBooks':
+      return MaterialPageRoute(builder: (context) => NewBooks());
+
+      case '/search':
+  final args = settings.arguments as Map<String, String?>;
+  return MaterialPageRoute(builder: (context) => Search(onSearch: args['searchTerm']!, filter: args['filterName'] ?? ''));
+
     default:
-      return MaterialPageRoute(builder: (context) => LandingPage());
+      return MaterialPageRoute(builder: (context) => HomePage());
   }
 }

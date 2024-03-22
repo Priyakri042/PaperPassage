@@ -51,6 +51,14 @@ dependencies:
   cached_network_image: ^3.3.1
   http: ^1.2.1
   google_sign_in: ^6.2.1
+  pull_to_refresh: ^2.0.0
+  page_transition: ^2.1.0
+  flutter_vector_icons: ^2.0.0
+  google_fonts: ^6.2.1
+  flutter_riverpod: ^2.5.1
+  firebase_auth_platform_interface: ^7.1.9
+  firebase_app_check: ^0.2.1+18
+  uuid: ^4.3.3
 
 dev_dependencies:
   flutter_test:

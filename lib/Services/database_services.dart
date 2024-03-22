@@ -3,8 +3,10 @@ import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/material.dart';
 import 'package:image/image.dart' as img;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -55,6 +57,8 @@ Future<void> uploadProfileImage(File imageFile, String userId) async {
       .collection('users')
       .doc(userId)
       .update({'profileImageUrl': downloadUrl});
+
+    // prefs.setString('profileImageUrl', downloadUrl);
 }
 
 //book details
@@ -88,4 +92,18 @@ void addBook(
     'description': description,
     'imageUrl': imageUrl,
   });
+}
+
+Future<Image> getImage() async {
+  FirebaseAuth auth = FirebaseAuth.instance;
+  String uid = auth.currentUser!.uid;
+  Map<String,dynamic> userDoc = (await FirebaseFirestore.instance.collection('users').doc(uid).get()).data()?? {};
+      //if image url is not present in firestore, return default image
+      if(userDoc['profileImageUrl'] == null){
+        return Image.asset('assets/images/owl.png');
+      }
+      //if image url is present in firestore, return the image
+      else{
+        return Image.network(userDoc['profileImageUrl']);
+      }
 }
