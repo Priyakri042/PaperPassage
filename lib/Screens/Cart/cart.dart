@@ -1,18 +1,18 @@
+// ignore_for_file: unused_import
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:kitaab/Services/database_services.dart';
 import 'package:kitaab/main.dart';
 import 'package:kitaab/navigation_bar.dart';
 import 'package:marquee/marquee.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-num globalPrice = 0;
 
 class Cart extends StatefulWidget {
   Cart({super.key});
@@ -95,69 +95,32 @@ class _CartState extends State<Cart> {
                     )
                   :
                   //list of books added to cart
-                  SmartRefresher(
-                      enablePullDown: true,
-                      controller: _refreshController,
-                      onRefresh: _onRefresh,
-
-                      //pull to refresh
-                      header: ClassicHeader(
-                        refreshingText: 'Refreshing...',
-                        failedText: 'Refresh failed',
-                        idleText: 'Pull down to refresh',
-                        releaseText: 'Release to refresh',
-                      ),
-
-                      child: Container(
-                        height: double.infinity,
-                        width: double.infinity,
-                        child: Column(
-                          children: [
-                            Expanded(child: CartList()),
-                            TotalPrice(),
-                            SizedBox(
-                              height: 10.0,
-                            ),
-                            ElevatedButton(
-                              onPressed: () {
-                                //navigate to checkout page
-                                Navigator.pushNamed(context, '/checkout');
-                              },
-                              //decorating the button
-                              //height of button
-
-                              style: ElevatedButton.styleFrom(
-                                //shadow of button
-                                //height of button
-                                elevation: 5,
-                                //background color of button
-
-                                backgroundColor: Colors.green[700],
-                                foregroundColor: Colors.white,
-                                padding: EdgeInsets.symmetric(
-                                    horizontal: 50, vertical: 15),
-                                textStyle: TextStyle(
-                                  fontSize: 20,
-                                ),
-                              ),
-                              child: Text('Checkout',
-                                  style: TextStyle(color: Colors.white)),
-                            ),
-                            SizedBox(
-                              height: 10.0,
-                            )
-                          ],
-                        ),
+                  Container(
+                      height: double.infinity,
+                      width: double.infinity,
+                      child: Column(
+                        children: [
+                          Expanded(child: CartList()),
+                          TotalPrice(),
+                          SizedBox(
+                            height: 10.0,
+                          ),
+                          
+                          SizedBox(
+                            height: 10.0,
+                          )
+                        ],
                       ),
                     );
             }
           },
         ),
-        bottomNavigationBar: bottomAppBar(),
+        // bottomNavigationBar: bottomAppBar(),
       ),
     );
   }
 }
+
 
 class CartList extends StatelessWidget {
   late int days = 10;
@@ -183,7 +146,7 @@ class CartList extends StatelessWidget {
 
             if (snapshot.connectionState == ConnectionState.waiting) {
               return //line progress indicator
-                  const LinearProgressIndicator();
+                  const SizedBox();
             }
             if (snapshot.data!.docs.isEmpty) {
               return Center(
@@ -198,121 +161,132 @@ class CartList extends StatelessWidget {
             }
 
             // Now you can use cartItems to build your list
-            return ListView.builder(
-              itemCount: cartItems.length,
-              itemBuilder: (BuildContext context, int index) {
-                return FutureBuilder<DocumentSnapshot>(
-                  future: FirebaseFirestore.instance
-                      .collection('books')
-                      .doc(cartItems[index]['bid'])
-                      .get(),
-                  builder: (BuildContext context,
-                      AsyncSnapshot<DocumentSnapshot> snapshot) {
-                    if (snapshot.hasError) {
-                      return Text('Something went wrong');
-                    }
+            return Container(
+              margin: EdgeInsets.all(10.0),
+              child: ListView.separated(
+                padding: EdgeInsets.all(10.0),
+                itemCount: cartItems.length,
+                separatorBuilder: (BuildContext context, int index) {
+                  return SizedBox(
+                    height: 10.0,
+                  );
+                },
+                itemBuilder: (BuildContext context, int index) {
+                  return FutureBuilder<DocumentSnapshot>(
+                    future: FirebaseFirestore.instance
+                        .collection('books')
+                        .doc(cartItems[index]['bid'])
+                        .get(),
+                    builder: (BuildContext context,
+                        AsyncSnapshot<DocumentSnapshot> snapshot) {
+                      if (snapshot.hasError) {
+                        return Text('Something went wrong');
+                      }
 
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return //line progress indicator
-                          const LinearProgressIndicator();
-                    }
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return //line progress indicator
+                            const SizedBox();
+                      }
 
-                    return Container(
-                      height: 100,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10.0),
-                        color: Colors.white,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.5),
-                            spreadRadius: 5,
-                            blurRadius: 7,
-                            offset: Offset(3, 3), // changes position of shadow
-                          ),
-                        ],
-                      ),
-                      child: Dismissible(
-                        key: Key(cartItems[index]
-                            ['bid']), // Unique key for Dismissible
-                        onDismissed: (direction) {
-                          // Remove the item from the cart in Firestore
-                          FirebaseFirestore.instance
-                              .collection('users')
-                              .doc(FirebaseAuth.instance.currentUser!.uid)
-                              .collection('cart')
-                              .doc(cartItems[index]['bid'])
-                              .delete()
-                              .then((value) => {
-                                    print('Book removed from cart'),
-                          });
-
-                          // Show a snackbar
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                              content: Text('Book removed from cart')));
-                        },
-                        background: Container(
-                            padding: EdgeInsets.only(right: 20.0),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                              color: Colors.brown[400],
+                      return Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10.0),
+                          color: Colors.white,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.brown[200]!.withOpacity(0.5),
+                              spreadRadius: 5,
+                              blurRadius: 7,
+                              offset:
+                                  Offset(3, 3), // changes position of shadow
                             ),
-                            alignment: Alignment.centerRight,
-                            child: Icon(Icons.delete)),
-                        child: Container(
-                          padding: EdgeInsets.all(10.0),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: EdgeInsets.all(5.0),
-                                margin: EdgeInsets.all(5.0),
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(10.0),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.grey.withOpacity(0.5),
-                                      spreadRadius: 3,
-                                      blurRadius: 5,
-                                      offset: Offset(
-                                          0, 3), // changes position of shadow
-                                    ),
-                                  ],
-                                ),
-                                child: Image.network(
-                                  snapshot.data!.get('imageUrl'),
-                                  width: 50,
-                                  height: 70,
-                                  fit: BoxFit.cover,
-                                  //border radius for image
-                                ),
+                          ],
+                        ),
+                        child: Dismissible(
+                          key: Key(cartItems[index]
+                              ['bid']), // Unique key for Dismissible
+                          onDismissed: (direction) {
+                            // Remove the item from the cart in Firestore
+                            FirebaseFirestore.instance
+                                .collection('users')
+                                .doc(FirebaseAuth.instance.currentUser!.uid)
+                                .collection('cart')
+                                .doc(cartItems[index]['bid'])
+                                .delete()
+                                .then((value) => {
+                                      print('Book removed from cart'),
+                                    });
+
+                            // Show a snackbar
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                content: Text('Book removed from cart')));
+                          },
+                          background: Container(
+                              padding: EdgeInsets.only(right: 20.0),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                                color: Colors.brown[400],
                               ),
-                              SizedBox(
-                                  width:
-                                      10), // Add some spacing between the image and the text
-                              Expanded(
-                                // Use Expanded to avoid overflow
-                                child: Text(
-                                  snapshot.data!.get('bookTitle'),
-                                  style: TextStyle(
-                                      color: Colors.black,
-                                      fontWeight: FontWeight.bold),
+                              alignment: Alignment.centerRight,
+                              child: Icon(Icons.delete)),
+                          child: Container(
+                            padding: EdgeInsets.all(10.0),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: EdgeInsets.all(5.0),
+                                  margin: EdgeInsets.all(5.0),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(10.0),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.grey.withOpacity(0.5),
+                                        spreadRadius: 3,
+                                        blurRadius: 5,
+                                        offset: Offset(
+                                            0, 3), // changes position of shadow
+                                      ),
+                                    ],
+                                  ),
+                                  child: Image.network(
+                                    snapshot.data!.get('imageUrl'),
+                                    width: 50,
+                                    height: 70,
+                                    fit: BoxFit.cover,
+                                    //border radius for image
+                                  ),
                                 ),
-                              ),
-                              Spacer(),
-                              TrailWidget(
-                                price: snapshot.data!.get('price'),
-                                rentPrice: snapshot.data!.get('rentPrice'),
-                                isRent: cartItems[index]['isRent'],
-                                bid: cartItems[index]['bid'],
-                              ),
-                            ],
+                                SizedBox(
+                                    width:
+                                        10), // Add some spacing between the image and the text
+                                Expanded(
+                                  // Use Expanded to avoid overflow
+                                  child: Text(
+                                    snapshot.data!.get('bookTitle'),
+                                    style: TextStyle(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                                Spacer(),
+                                Expanded(
+                                  child: TrailWidget(
+                                    price: snapshot.data!.get('price'),
+                                    rentPrice: snapshot.data!.get('rentPrice'),
+                                    isRent: cartItems[index]['isRent'],
+                                    bid: cartItems[index]['bid'],
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                    );
-                  },
-                );
-              },
+                      );
+                    },
+                  );
+                },
+              ),
             );
           },
         ));
@@ -320,216 +294,427 @@ class CartList extends StatelessWidget {
 }
 
 class TrailWidget extends StatefulWidget {
+  final int price;
+  final int rentPrice;
   final bool isRent;
-  int price;
-  int rentPrice;
   final String bid;
 
-  int subtotal = 0;
-  int total = 0;
-
   TrailWidget(
-      {super.key,
-      required this.price,
+      {required this.price,
       required this.rentPrice,
       required this.isRent,
       required this.bid});
 
-
-  int days = 10;
-
   @override
-  _TrailWidgetState createState() => _TrailWidgetState();
+  State<TrailWidget> createState() => _TrailWidgetState();
 }
 
 class _TrailWidgetState extends State<TrailWidget> {
+  FirebaseFirestore firestore = FirebaseFirestore.instance;
 
-@override
-void initState() {
-  super.initState();
-  loadDays();
-}
+  late int days = 10;
+  late int subtotal = widget.isRent ? widget.rentPrice * days : widget.price;
 
-
-  Future<void> loadDays() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    int days = prefs.getInt('days_${widget.bid}') ?? 10;
-    setState(() {
-      widget.days = days;
-    });
-    
-  }
   @override
   Widget build(BuildContext context) {
-    
-    setState(() {
-      if (widget.isRent) {
-        widget.subtotal = widget.rentPrice;
-      } else {
-        widget.subtotal = widget.price;
-      }
-    });
-   
-
-    return widget.isRent
-        ? Container(
-            //get a + - button to increase or decrease the number of days
-            alignment: Alignment.topRight,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Row(
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.remove),
-                      onPressed: () async {
-
-                        setState(() {
-                          //if days are greater than 10, decrease the days
-                          if (widget.days > 10) {
-                            widget.days -= 1;
-                            SharedPreferences.getInstance().then((prefs) {
-                              prefs.setInt('days_${widget.bid}', widget.days);
-                            });
-                            
-                            FirebaseFirestore firestore = FirebaseFirestore.instance;
-                            firestore
-                                .collection('users')
-                                .doc(FirebaseAuth.instance.currentUser!.uid)
-                                .collection('cart')
-                                .doc(widget.bid)
-                                .update({
-                              'total': widget.rentPrice * widget.days
-                            });
-                            
-                          }
-                        });
-                      },
-                    ),
-                    Text('${widget.days}'),
-                    IconButton(
-                      icon: Icon(Icons.add),
-                      onPressed: () async {
-                        setState(() {
-                          widget.days += 1;
-                          widget.subtotal = widget.rentPrice * widget.days;
-
-                          FirebaseFirestore firestore = FirebaseFirestore.instance;
-                          firestore
-                              .collection('users')
-                              .doc(FirebaseAuth.instance.currentUser!.uid)
-                              .collection('cart')
-                              .doc(widget.bid)
-                              .update({
-                            'total': widget.rentPrice * widget.days
-                          });
-                          SharedPreferences.getInstance().then((prefs) {
-                              prefs.setInt('days_${widget.bid}', widget.days);
-
-
-                            });
-                        });
-                      },
-                    ),
-                  ],
-                ),
-                Text('Rs.${widget.subtotal * widget.days}'),
-              ],
-            ),
-          )
-        : Text('Rs. ${widget.price}');
-  }
-}
-
-class TotalPrice extends StatefulWidget {
-  int subtotal = 0;
-  
-   Future<int> getSubtotal() async {
-    QuerySnapshot<Map<String, dynamic>> cartItems = await FirebaseFirestore
-        .instance
+    FirebaseFirestore firestore = FirebaseFirestore.instance;
+    DocumentReference cart = firestore
         .collection('users')
         .doc(FirebaseAuth.instance.currentUser!.uid)
         .collection('cart')
-        .get();
+        .doc(widget.bid);
+return FutureBuilder<DocumentSnapshot>(
+    future: cart.get(),
+    builder: (BuildContext context, AsyncSnapshot<DocumentSnapshot> snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return LinearProgressIndicator(
+            backgroundColor: Colors.brown[200],
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.brown[400]!)
 
-    
-    for (int i = 0; i < cartItems.docs.length; i++) {
-      
-      subtotal += cartItems.docs[i]['total'] as int;
+        ); // Show a loading spinner while waiting
+      } else if (snapshot.hasError) {
+        return Text('Error: ${snapshot.error}'); // Show error message if something went wrong
+      } else {
+        // The Future has completed successfully, we can now access the data
+        Map<String, dynamic>? data = snapshot.data!.data() as Map<String, dynamic>?;
+
+    if (widget.isRent) {
+      return Container(
+        height: 100,
+        width: double.infinity,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            //want a drop down menu to select the number of days starting from 10 days
+            widget.isRent
+                ? Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
+                    child: Row(
+                      children: [
+                        IconButton(
+                          icon: Icon(Icons.calendar_month),
+                          onPressed: () {
+                            showModalBottomSheet(
+                              context: context,
+                              isDismissible:true,
+                              builder: (BuildContext context) {
+                                return Container(
+                                  height: 250,
+                                  padding: EdgeInsets.all(10.0),
+                                  child: Column(
+                                    children: [
+                                      SizedBox(
+                                        height: 20,),
+                                      Text(
+                                        'Select the number of days',
+                                        style: TextStyle(
+                                          color: Colors.black,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      SizedBox(
+                                        height: 20,
+                                      ),
+                                      Container(
+                                        height: 100,
+                                        padding: EdgeInsets.all(0),
+                                        child: CupertinoPicker(
+                                          itemExtent: 30,
+                                          onSelectedItemChanged: (int index) {
+                                            days = index + 10;
+                                          },
+                                          children: List.generate(
+                                              21,
+                                              (index) => Text(
+                                                    '${index + 10} days',
+                                                    style: TextStyle(
+                                                      color: Colors.black,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                          fontSize:  20.0,
+                                                    ),
+                                                  )
+                                                  
+                                                  ),
+                                        ),
+                                      ),
+                                      ElevatedButton(
+                                        onPressed: () {
+                                          firestore
+                                              .collection('users')
+                                              .doc(FirebaseAuth
+                                                  .instance.currentUser!.uid)
+                                              .collection('cart')
+                                              .doc(widget.bid)
+                                              .set(
+                                            {
+                                              'days': days,
+                                              'total': widget.rentPrice * days
+                                            },
+                                            SetOptions(merge: true),
+                                          );
+
+                                          Navigator.pop(context);
+                                        },
+                                        child: Text('Save',
+                                            style: TextStyle(
+                                                color: Colors.brown,
+                                                fontWeight: FontWeight.bold),
+                                      ),
+                                      )
+                                    ],
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                        ),
+                        Container(
+                          height: 30,
+                          alignment: Alignment.center,
+                          child: Text(
+                            data!['days'] == null
+                                ? '10 days'
+                                : '${data['days']} days',
+                            
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          
+                        ),
+                      ],
+                    ),
+                  )
+                : Container(),
+            Text( widget.isRent
+                ? '₹${data!['total'] == null ? widget.rentPrice * days : '${data['total']} (${data['rentPrice']}/day) '}'
+                : '₹${widget.price}',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
+              
+            ),
+            SizedBox(
+              height: 5,
+            ),
+          ],
+        ),
+      );
+    } else {
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            data!['total'] == null ? '₹${widget.price}' : '₹${data['total']}',
+            style: TextStyle(
+              color: Colors.black,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      );
     }
-
-    print('Subtotal: $subtotal\n');
-    return subtotal;
   }
-  @override
-  _TotalPriceState createState() => _TotalPriceState();
+        });
+
+  }
 }
 
 
-class _TotalPriceState extends State<TotalPrice> {
 
- 
-  final int tax = 10;
-
-  final int shippingCharges = 20;
+class TotalPrice extends StatelessWidget {
+  FirebaseFirestore firestore = FirebaseFirestore.instance;
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<int>(
-      future: TotalPrice().getSubtotal(),
-      builder: (BuildContext context, AsyncSnapshot<int> snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return CircularProgressIndicator();
-        }
+    return Container(
+      padding: EdgeInsets.all(10.0),
+      child: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('users')
+            .doc(FirebaseAuth.instance.currentUser!.uid)
+            .collection('cart')
+            .snapshots(),
+        builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+          if (snapshot.hasError) {
+            return Text('Something went wrong');
+          }
 
-        if (snapshot.hasError) {
-          return Text('Error: ${snapshot.error}');
-        }
-        
-        int updatedSubtotal = snapshot.data!;
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return //line progress indicator
+                const SizedBox();
+          }
 
-        return Container(
-          padding: EdgeInsets.all(10.0),
-          child: Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('Subtotal'),
-                  Text('Rs. $updatedSubtotal'),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('Tax'),
-                  Text('Rs. $tax'),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('Shipping Charges'),
-                  Text('Rs. $shippingCharges'),
-                ],
-              ),
-              Divider(
-                color: Colors.black,
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('Total'),
-                  Text('Rs. ${ 
-                    snapshot.data!
-                     + tax + shippingCharges}'),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
+          if (snapshot.data!.docs.isEmpty) {
+            return const SizedBox();
+          }
+
+          List<dynamic> cartItems = snapshot.data!.docs;
+          int? total = 0;
+          for (int i = 0; i < cartItems.length; i++) {
+            total =  total != null? total + cartItems[i]['total'] : cartItems[i]['total'];
+            }
+
+          return Container(
+            margin: EdgeInsets.all(10.0),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10.0),
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.brown[200]!.withOpacity(0.5),
+                  spreadRadius: 5,
+                  blurRadius: 7,
+                  offset: Offset(3, 3), // changes position of shadow
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                Container(
+                  height: 70,
+                  
+                  decoration: BoxDecoration(
+                    
+                    borderRadius: BorderRadius.circular(10.0),
+                    color: Colors.white,
+                   
+                  ),
+                  padding: EdgeInsets.all(10.0),
+            
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            'Total',
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Spacer(),
+                          Text(
+                            '₹$total',
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          
+                        ],
+                      ),
+                      SizedBox(
+                        height: 5.0,
+                      ),
+                      Row(children: [
+                        Text(
+                          'Delivery Charges',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Spacer(),
+                        Text(
+                          '₹50',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],)
+                    ],
+                  ),
+                ),
+                
+                Container(
+                  height: 50,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10.0),
+                    color: Colors.white,
+                   
+                  ),
+                  padding: EdgeInsets.all(10.0),
+                  child: Row(
+                    children: [
+                      Text(
+                        'Total Payable',
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                          fontSize:  20.0,
+                        ),
+                      ),
+                      Spacer(),
+                      Text(
+                        '₹${total! + 50}',
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                          fontSize:  20.0,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+             Divider(
+                  color: Colors.brown,
+                  thickness: 1,
+             ),
+                
+                Container(
+                  padding: EdgeInsets.all(10.0),
+                  
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    
+                    children: [
+                      Expanded(
+                        
+                        child: ElevatedButton(
+                          onPressed: () {
+                            //clear the cart
+                            FirebaseFirestore.instance
+                                .collection('users')
+                                .doc(FirebaseAuth.instance.currentUser!.uid)
+                                .collection('cart')
+                                .get()
+                                .then((snapshot) {
+                              for (DocumentSnapshot ds in snapshot.docs) {
+                                ds.reference.delete();
+                              }
+                            });
+                          },
+                          //decorating the button
+                          //height of button
+                  
+                          style: ElevatedButton.styleFrom(
+                            //shadow of button
+                            //height of button
+                            elevation: 10,
+                            //background color of button
+                  
+                            backgroundColor: Colors.red[700],
+                            foregroundColor: Colors.white,
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 50, vertical: 15),
+                            textStyle: TextStyle(
+                              fontSize: 15,
+                            ),
+                          ),
+                          child: Text('Clear Cart',
+                              style: TextStyle(color: Colors.white)),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 10.0,
+                      ),
+                      Expanded(
+                        
+                        child: ElevatedButton(
+                          onPressed: () {
+                            //navigate to checkout page
+                            Navigator.pushNamed(context, '/checkout');
+                          },
+                          //decorating the button
+                          //height of button
+                  
+                          style: ElevatedButton.styleFrom(
+                            //shadow of button
+                            //height of button
+                            elevation: 10,
+                            backgroundColor: Colors.green[600],
+                            
+                            //background color of button
+                  
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 50, vertical: 15),
+                            textStyle: TextStyle(
+                              fontSize: 15,
+                            ),
+                          ),
+                          child: Text('Checkout',
+                              style: TextStyle(color: Colors.white)
+                  
+                      
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 }
-

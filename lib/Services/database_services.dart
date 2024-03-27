@@ -91,6 +91,7 @@ void addBook(
     'price': price,
     'description': description,
     'imageUrl': imageUrl,
+    'bookTitleUpper': bookTitle.toUpperCase(),
   });
 }
 

@@ -274,6 +274,9 @@ class _BookState extends State<Book> {
                           'rentPrice': await getBookDetails().then(
                               (value) => value.data()!['rentPrice']),
                           'isRent': isRent,
+                          'total' : isRent ? await getBookDetails().then(
+                              (value) => value.data()!['rentPrice'] * 10) : await getBookDetails().then(
+                              (value) => value.data()!['price']),
                          
                         });
       
