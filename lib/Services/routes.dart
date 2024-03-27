@@ -37,10 +37,7 @@ Route<dynamic> generateRoute(RouteSettings settings) {
       case '/newBooks':
       return MaterialPageRoute(builder: (context) => NewBooks());
 
-      case '/search':
-  final args = settings.arguments as Map<String, String?>;
-  return MaterialPageRoute(builder: (context) => Search(onSearch: args['searchTerm']!, filter: args['filterName'] ?? ''));
-
+      
     default:
       return MaterialPageRoute(builder: (context) => HomePage());
   }

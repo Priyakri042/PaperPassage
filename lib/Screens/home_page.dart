@@ -1,11 +1,16 @@
 // import 'package:firebase_auth/firebase_auth.ropart';
+import 'dart:async';
+import 'dart:ui';
+
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 import 'package:kitaab/Screens/Book/book.dart';
+import 'package:kitaab/Widgets/search.dart';
 import 'package:kitaab/main.dart';
 import 'package:kitaab/navigation_bar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -32,6 +37,8 @@ class _HomePageState extends State<HomePage> {
   TextEditingController searchController = TextEditingController();
 
   String? _filterName;
+
+  bool isChanged = false;
 
   void _showModalBottomSheet(BuildContext context, String category) {
     //show the books in that particular category
@@ -66,14 +73,7 @@ class _HomePageState extends State<HomePage> {
                     }
 
                     if (snapshot.connectionState == ConnectionState.waiting) {
-                      return SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: const CircularProgressIndicator(
-                          color: Colors.brown,
-                          //small circular progress indicator
-                        ),
-                      );
+                      return SizedBox();
                     }
                     return Container(
                       height: MediaQuery.of(context).size.height * 0.7,
@@ -151,7 +151,47 @@ class _HomePageState extends State<HomePage> {
     'Romance',
     'Science Fiction',
     'Thriller'
+    
   ];
+
+  Stream<QuerySnapshot> filteredBookStream = Stream.empty();
+
+  filterBooks(TextEditingController searchTerm) {
+    //filter books based on search term
+    if (searchTerm.text.isNotEmpty) {
+
+      setState(() {
+
+        isChanged = true;
+        filteredBookStream = FirebaseFirestore.instance
+             .collection('books')
+              .where('bookTitleUpper', isGreaterThanOrEqualTo: searchTerm.text.toUpperCase())
+              .where('bookTitleUpper', isLessThan: searchTerm.text.toUpperCase() + 'z')
+              .snapshots();
+      });
+    } else {
+      setState(() {
+        isChanged = false;
+      });
+    }
+  }
+
+  final TextEditingController _controller = TextEditingController();
+
+  StreamController<String> _searchController = StreamController<String>();
+  void initState() {
+    super.initState();
+
+    _controller.addListener(() {
+      filterBooks(_controller);
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -163,308 +203,81 @@ class _HomePageState extends State<HomePage> {
       },
       child: Scaffold(
         resizeToAvoidBottomInset: false,
-        body: Container(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minHeight: MediaQuery.of(context).size.height,
-            ),
-            child: Column(
-              children: [
-                Container(
-                  padding: const EdgeInsets.fromLTRB(20, 15, 20, 0),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            greeting(),
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.brown[300],
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          FutureBuilder<String>(
-                            future:  getUserName(
-                              
-                            ),
-                            builder: (BuildContext context,
-                                AsyncSnapshot<String> snapshot) {
-                              // Check if the Future is resolved
-                              if (snapshot.connectionState ==
-                                  ConnectionState.done) {
-                                // If we got an error
-                                if (snapshot.hasError) {
-                                  return Text('Error: ${snapshot.error}');
-                                }
-
-                                // If we got our data
-                                return Text(
-                                  snapshot.data ?? '',
-                                  style: const TextStyle(
-                                    fontSize: 25,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                );
-                              }
-                              // If the Future is still running
-                              else {
-                                return SizedBox(
-                                    height: 20,
-                                    width: 20,
-                                    child: const CircularProgressIndicator());
-                              }
-                            },
-                          )
-                        ],
-                      ),
-                      const Spacer(),
-                      const Image(
-                        image: AssetImage('assets/images/owl.png'),
-                        height: 150,
-                      ),
-                    ],
-                  ),
+        body: Stack(
+          children: [
+            Container(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: MediaQuery.of(context).size.height,
                 ),
-
-                //a search bar with filter icon at the end
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Colors.brown,
-                          blurRadius: 5,
-                          offset: Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: Container(
-                      width: MediaQuery.of(context).size.width,
+                child: Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(20, 15, 20, 0),
                       child: Row(
-                        mainAxisSize: MainAxisSize.max,
-                        children: [
-                          const Icon(
-                            Icons.search,
-                            color: Colors.brown,
-                            shadows: [
-                              Shadow(
-                                color: Colors.grey,
-                                blurRadius: 5,
-                                offset: Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(width: 10),
-                          Flexible(
-                            fit: FlexFit.loose,
-                            child: TextField(
-                              controller: searchController,
-                              decoration: InputDecoration(
-                                  border: InputBorder.none,
-                                  hintText: 'Search for books',
-                                  hintStyle: TextStyle(
-                                    color: Colors.brown[500],
-                                    shadows: const [
-                                      Shadow(
-                                        color: Colors.grey,
-                                        blurRadius: 5,
-                                        offset: Offset(0, 2),
-                                      ),
-                                    ],
-                                  )),
-                              onSubmitted: (value) {
-                                Navigator.pushNamed(context, '/search',
-                                    arguments: {
-                                      'searchTerm': value,
-                                      'filterName': _filterName,
-                                    });
-                              },
-                            ),
-                          ),
-                          PopupMenuButton<String>(
-                            icon: const Icon(
-                              Icons.filter_list,
-                              color: Colors.brown,
-                              shadows: [
-                                Shadow(
-                                  color: Colors.grey,
-                                  blurRadius: 5,
-                                  offset: Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            itemBuilder: (BuildContext context) =>
-                                <PopupMenuEntry<String>>[
-                              const PopupMenuItem<String>(
-                                value: 'Action',
-                                child: Text('Action'),
-                              ),
-                              const PopupMenuItem<String>(
-                                value: 'Fantasy',
-                                child: Text('Fantasy'),
-                              ),
-                              const PopupMenuItem<String>(
-                                value: 'Horror',
-                                child: Text('Horror'),
-                              ),
-                              const PopupMenuItem<String>(
-                                value: 'Romance',
-                                child: Text('Romance'),
-                              ),
-                              const PopupMenuItem<String>(
-                                value: 'Science Fiction',
-                                child: Text('Science Fiction'),
-                              ),
-                              const PopupMenuItem<String>(
-                                value: 'Thriller',
-                                child: Text('Thriller'),
-                              ),
-                            ],
-                            onSelected: (String value) {
-                              _filterName = value;
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-                  child: Column(
-                    children: [
-                      Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Text(
-                            'New Arrivals',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                greeting(),
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.brown[300],
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              FutureBuilder<String>(
+                                future: getUserName(),
+                                builder: (BuildContext context,
+                                    AsyncSnapshot<String> snapshot) {
+                                  // Check if the Future is resolved
+                                  if (snapshot.connectionState ==
+                                      ConnectionState.done) {
+                                    // If we got an error
+                                    if (snapshot.hasError) {
+                                      return Text('Error: ${snapshot.error}');
+                                    }
+
+                                    // If we got our data
+                                    return Text(
+                                      snapshot.data ?? '',
+                                      style: const TextStyle(
+                                        fontSize: 25,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    );
+                                  }
+                                  // If the Future is still running
+                                  else {
+                                    return SizedBox(
+                                        height: 20,
+                                        width: 20,
+                                        child: Container());
+                                  }
+                                },
+                              )
+                            ],
                           ),
                           const Spacer(),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.pushNamed(context, '/newBooks');
-                            },
-                            child:  Text(
-                              'View all', 
-                              style: TextStyle(
-                                color: Colors.brown,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                          const Image(
+                            image: AssetImage('assets/images/owl.png'),
+                            height: 150,
                           ),
                         ],
                       ),
-
-                      const SizedBox(height: 10),
-                      // row of new books cards with horizontal scroll
-
-                      StreamBuilder<QuerySnapshot>(
-                        stream: FirebaseFirestore.instance
-                            .collection('books')
-                            .orderBy('date', descending: true)
-                            .limit(5)
-                            .snapshots(),
-                        builder: (BuildContext context,
-                            AsyncSnapshot<QuerySnapshot> snapshot) {
-                          if (snapshot.hasError) {
-                            return const Text('Something went wrong');
-                          }
-
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: const CircularProgressIndicator(
-                                color: Colors.brown,
-                                //small circular progress indicator
-                              ),
-                            );
-                          }
-                          return Container(
-                            height: 250,
-                            child: ListView.builder(
-                              padding: const EdgeInsets.all(10),
-                              scrollDirection: Axis.horizontal,
-                              itemCount: snapshot.data!.docs.length,
-                              itemBuilder: (BuildContext context, int index) {
-                                DocumentSnapshot document =
-                                    snapshot.data!.docs[index];
-                                Book book = Book.getBookDetails(document);
-                                return BookCard(book: book);
-                              },
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-
-                //a category section
-                const SizedBox(height: 20),
-                Container(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 10, 0),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Text('What\'s Your Genre?',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          )),
-                    ],
-                  ),
-                ),
-
-                Container(
-                  height: 278,
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-                  child: GridView.builder(
-                    padding: const EdgeInsets.all(3),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 10,
-                      mainAxisSpacing: 10,
-                      childAspectRatio: 3/2.1,
                     ),
-                    itemCount: categories.length,
-                    itemBuilder: (BuildContext context, int index) {
-                      String category = categories[index];
-                      Image imagePath = images[category]!;
-                      return Container(
 
+                    //a search bar with filter icon at the end
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
                         decoration: BoxDecoration(
-                          image: DecorationImage(
-                            image: imagePath.image ,
-                            fit: BoxFit.cover,
-                            colorFilter: ColorFilter.mode(
-                                Colors.black.withOpacity(0.5),
-                                BlendMode.darken),
-                          ),
-                          color: Colors.brown[
-                              200], // Change this to your desired background color
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: Colors
-                                .brown, // Change this to your desired border color
-                            width: 2, // Change this to your desired border width
-                          ),
-
+                          color: Colors.grey[200],
+                          borderRadius: BorderRadius.circular(20),
                           boxShadow: const [
                             BoxShadow(
                               color: Colors.brown,
@@ -472,36 +285,341 @@ class _HomePageState extends State<HomePage> {
                               offset: Offset(0, 3),
                             ),
                           ],
-                          //faded background
-
-                          backgroundBlendMode: BlendMode.darken,
                         ),
-                        child: InkWell(
-                          //background image
+                        child: Container(
+                          width: MediaQuery.of(context).size.width,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.max,
+                            children: [
+                              const Icon(
+                                Icons.search,
+                                color: Colors.brown,
+                                shadows: [
+                                  Shadow(
+                                    color: Colors.grey,
+                                    blurRadius: 5,
+                                    offset: Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: TextField(
+                                  style: const TextStyle(
+                                    color: Colors.brown,
+                                    
+                                  ),
+                                  controller: _controller,
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _searchController.add(value);
+                                      isChanged = true;
+                                      filterBooks(_controller);
+                                    });
+                                  },
+                                  decoration:  InputDecoration(
+                                    hintText: 'Search for books',
+                                    hintStyle: const TextStyle(
+                                      color: Colors.brown,
+                                    ),
+                                    border: InputBorder.none,
+                                    
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
 
-                          splashColor: Colors.brown[200],
-                          borderRadius: BorderRadius.circular(10),
-                          onTap: () {
-                            _showModalBottomSheet(context, categories[index]);
-                          },
-                          child: Center(
-                            child: Text(
-                              categories[index],
-                              style: const TextStyle(
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Text(
+                                'New Arrivals',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const Spacer(),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pushNamed(context, '/newBooks');
+                                },
+                                child: Text(
+                                  'View all',
+                                  style: TextStyle(
+                                    color: Colors.brown,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 10),
+                          // row of new books cards with horizontal scroll
+
+                          StreamBuilder<QuerySnapshot>(
+                            stream: FirebaseFirestore.instance
+                                .collection('books')
+                                .orderBy('date', descending: true)
+                                .limit(5)
+                                .snapshots(),
+                            builder: (BuildContext context,
+                                AsyncSnapshot<QuerySnapshot> snapshot) {
+                              if (snapshot.hasError) {
+                                return const Text('Something went wrong');
+                              }
+
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return SizedBox();
+                              }
+                              return Container(
+                                height: 250,
+                                child: ListView.builder(
+                                  padding:
+                                      const EdgeInsets.fromLTRB(0, 10, 0, 10),
+                                  scrollDirection: Axis.horizontal,
+                                  itemCount: snapshot.data!.docs.length,
+                                  itemBuilder:
+                                      (BuildContext context, int index) {
+                                    DocumentSnapshot document =
+                                        snapshot.data!.docs[index];
+                                    Book book = Book.getBookDetails(document);
+                                    return BookCard(book: book);
+                                  },
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    //a category section
+                    const SizedBox(height: 20),
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 10, 0),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Text('What\'s Your Genre?',
+                              style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                              )),
+                        ],
+                      ),
+                    ),
+
+                    Container(
+                      height: 278,
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                      child: GridView.builder(
+                        padding: const EdgeInsets.all(3),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 10,
+                          mainAxisSpacing: 10,
+                          childAspectRatio: 3 / 2.1,
+                        ),
+                        itemCount: categories.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          String category = categories[index];
+                          Image imagePath = images[category]!;
+                          return Container(
+                            decoration: BoxDecoration(
+                              image: DecorationImage(
+                                image: imagePath.image,
+                                fit: BoxFit.cover,
+                                colorFilter: ColorFilter.mode(
+                                    Colors.black.withOpacity(0.5),
+                                    BlendMode.darken),
+                              ),
+                              color: Colors.brown[
+                                  200], // Change this to your desired background color
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: Colors
+                                    .brown, // Change this to your desired border color
+                                width:
+                                    2, // Change this to your desired border width
+                              ),
+
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Colors.brown,
+                                  blurRadius: 5,
+                                  offset: Offset(0, 3),
+                                ),
+                              ],
+                              //faded background
+
+                              backgroundBlendMode: BlendMode.darken,
+                            ),
+                            child: InkWell(
+                              //background image
+
+                              splashColor: Colors.brown[200],
+                              borderRadius: BorderRadius.circular(10),
+                              onTap: () {
+                                _showModalBottomSheet(
+                                    context, categories[index]);
+                              },
+                              child: Center(
+                                child: Text(
+                                  categories[index],
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    )
+                  ],
+                ),
+              ),
+            ),
+            isChanged
+                ? Positioned(
+                    top: 220,
+                    left: 0,
+                    right: 0,
+                    child: StreamBuilder<QuerySnapshot>(
+                      stream: filteredBookStream,
+                      builder: (BuildContext context,
+                          AsyncSnapshot<QuerySnapshot> snapshot) {
+                        if (snapshot.hasError) {
+                          return const Text('Something went wrong');
+                        }
+
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return SizedBox();
+                        }
+                        return Positioned(
+                          top: 220,
+                          left: 0,
+                          right: 0,
+                          child: Container(
+                            height: MediaQuery.of(context).size.height * 0.7,
+                            width: MediaQuery.of(context).size.width * 0.9,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              color: Colors.grey.withOpacity(0.5),
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [Colors.brown[100]!, Colors.black],
+                              ),
+                            ),
+                            child: ClipRect(
+                              child: BackdropFilter(
+                                filter: ImageFilter.blur(
+                                    sigmaX: 2,
+                                    sigmaY: 2,
+                                    tileMode: TileMode.clamp),
+                                child: ListView.builder(
+                                  padding: const EdgeInsets.all(10),
+                                  itemCount: snapshot.data!.docs.length,
+                                  itemBuilder:
+                                      (BuildContext context, int index) {
+                                    DocumentSnapshot document =
+                                        snapshot.data!.docs[index];
+                                    Book book = Book.getBookDetails(document);
+
+
+
+                                    return 
+                                    //if no books found
+                                    snapshot.data!.docs.length == 0
+                                     ?
+                                    Container(
+                                      child: Center(
+                                        child: Text('No books found', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black)),
+                                      ),
+                                    
+                                    ):
+                                    
+                                    Container(
+                                      margin: const EdgeInsets.only(bottom: 10),
+                                      decoration: BoxDecoration(
+                                        color: Colors.brown[100],
+                                        borderRadius: BorderRadius.circular(10),
+                                        boxShadow: const [
+                                          BoxShadow(
+                                            color: Colors.black,
+                                            blurRadius: 5,
+                                            offset: Offset(0, 3),
+                                          ),
+                                        ],
+                                      ),
+                                      child: TextButton(
+                                        onPressed: () {
+                                          Navigator.pushNamed(context, '/book',
+                                              arguments: book.bid);
+                                        },
+                                        child: Row(
+                                          children: [
+                                            Text(
+                                              book.title,
+                                              style: const TextStyle(
+                                                fontSize: 15,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.black,
+                                              ),
+                                            ),
+                                            const Spacer(),
+                                            book.forRent == 'Rent'
+                                                ? Text(
+                                                    ' \Rs.${(book.rentPrice).toInt().toString()}/day',
+                                                    style: const TextStyle(
+                                                        fontSize: 15,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        color: Colors.black),
+                                                  )
+                                                : Text(
+                                                    ' \Rs. ${book.price.toString()}',
+                                                    style: const TextStyle(
+                                                        fontSize: 15,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        color: Colors.black),
+                                                  ),
+                                          ],
+                                        ),
+
+                                      ),
+                                    );
+                                  },
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
-                )
-              ],
-            ),
-          ),
+                        );
+                      },
+                    ),
+                  )
+                : Container(
+                    height: 0,
+                    width: 0,
+              ),
+          ],
         ),
         bottomNavigationBar: bottomAppBar(),
       ),

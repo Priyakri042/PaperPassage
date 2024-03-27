@@ -118,7 +118,7 @@ class _SettingsState extends State<Settings> {
                           AsyncSnapshot<Image> snapshot) {
                         if (snapshot.connectionState ==
                             ConnectionState.waiting) {
-                          return CircularProgressIndicator(); // or some placeholder
+                          return Container();// or some placeholder
                         } else {
                           if (snapshot.hasError) {
                             return Icon(Icons.error); // or some error widget

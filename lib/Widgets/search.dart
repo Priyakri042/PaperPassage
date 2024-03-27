@@ -1,66 +1,63 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-class Search extends StatelessWidget {
-  String onSearch;
-  String filter;
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 
-  Search({super.key, required this.onSearch, required this.filter});
+class BookSearch extends SearchDelegate<String> {
+  final List<dynamic> books; // This should be a list of your book titles
 
-  // String generateShortForm(String title) {
-  //   List<String> words = title.split(' ');
-  //   String shortForm = '';
-  //   for (String word in words) {
-  //     if (word.isNotEmpty) {
-  //       shortForm += word[0].toUpperCase();
-  //     }
-  //   }
-  //   return shortForm;
-  // }
+  BookSearch(this.books);
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: FutureBuilder(
-        future: FirebaseFirestore.instance
-            .collection('books')
-            .where('bookTitle', isGreaterThanOrEqualTo: onSearch,
-                isLessThan: onSearch + 'z'
-                )
-            .get(),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-    print('Error: ${snapshot.error}');
-  }
-  if (snapshot.connectionState == ConnectionState.waiting) {
-    return Center(child: CircularProgressIndicator());
-  }
-         
-          return ListView.builder(
-            itemCount: snapshot.data!.docs.length,
-            itemBuilder: (context, index) {
-              DocumentSnapshot books = snapshot.data!.docs[index];
-              return Container(
-                child: Card(
-                  child: ListTile(
-                    leading: Image.network(books['imageUrl']),
-                    title: Text(books['bookTitle']),
-                    subtitle: Text(books['bookAuthor']),
-                    trailing: IconButton(
-                      icon: Icon(Icons.add),
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/book',
-                            arguments: books.id);
-                      },
-                    ),
-                  ),
-                ),
-              );
-            },
-          );
+  List<Widget> buildActions(BuildContext context) {
+    return [
+      IconButton(
+        icon: Icon(Icons.clear),
+        onPressed: () {
+          query = '';
         },
       ),
+    ];
+  }
+
+  @override
+  Widget buildLeading(BuildContext context) {
+    return IconButton(
+      icon: Icon(Icons.arrow_back),
+      onPressed: () {
+        close(context, '');
+      },
+    );
+  }
+
+  @override
+  Widget buildResults(BuildContext context) {
+    // This is where you would handle the search results when the user submits their search
+    // For now, it just shows the search query
+    return Center(
+      child: Text(query),
+    );
+  }
+
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    final suggestions = query.isEmpty
+        ? []
+        : books.where((book) => book.startsWith(query)).toList();
+
+    return ListView.builder(
+      itemCount: suggestions.length,
+      itemBuilder: (context, index) {
+        return ListTile(
+          title: Text(suggestions[index]),
+          onTap: () {
+            // This is where you would handle what happens when the user taps on a suggestion
+            // For now, it just shows the suggestion
+            showResults(context);
+          },
+        );
+      },
     );
   }
 }

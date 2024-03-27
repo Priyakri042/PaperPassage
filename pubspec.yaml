@@ -59,6 +59,8 @@ dependencies:
   firebase_auth_platform_interface: ^7.1.9
   firebase_app_check: ^0.2.1+18
   uuid: ^4.3.3
+  quantupi: ^0.0.6
+  flutter_pay_upi: ^0.2.1
 
 dev_dependencies:
   flutter_test:
