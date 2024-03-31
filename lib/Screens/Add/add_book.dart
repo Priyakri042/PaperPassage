@@ -32,6 +32,8 @@ class _AddBookState extends State<AddBook> {
   String? period;
   
   late int rentPrice;
+  
+  late int stock = 0;
 
   
 
@@ -225,48 +227,86 @@ class _AddBookState extends State<AddBook> {
                       //if sell option is selected, mention selling price
       
                       //price of book
-                     rentOrSell == 'Rent' || rentOrSell == 'Both'
-                          ? TextFormField(
-                              
-                              onSaved: (value) {
-                                rentPrice = int.parse(value!);
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children:[
+                          SizedBox(
+                            width: 150.0,
+                            child: TextFormField(
+                              onChanged: (value) { 
+                                setState(() {
+                                  stock = int.parse(value);
+                                }); 
                               },
                               decoration: const InputDecoration(
-                                labelText: 'Rent Price per day',
-                              ),
-                              //input type is number
-                              keyboardType: TextInputType.number,
-                              validator: (value) {
-                                if (value!.isEmpty) {
-                                  return 'Please enter rent price';
-                                }
+                                labelText: 'Stock',
+                                hintText: 'Enter Stock',
                                 
-                                return null;
-                              },
-                            )
-                          : TextFormField(
-                              onSaved: (value) {
-                                price =int.parse(value!);
-                              },
-                              decoration: const InputDecoration(
-                                labelText: 'Price',
-                                hintText: 'Enter Price',
+
                               ),
+                              
                               keyboardType: TextInputType.number,
                               validator: (value) {
-                                if (value!.isEmpty) {
-                                  return 'Please enter price';
+                                if (value!.isEmpty || int.parse(value) < 1) {
+                                  setState(() {
+                                    
+                                  stock =  int.parse(value);
+                                  });
+                                  return 'Please enter your stock ';
                                 }
                                 return null;
                               },
                             ),
+                          ),
+                                           rentOrSell == 'Rent' || rentOrSell == 'Both'
+                          ? SizedBox(
+                            width: 150.0,
+                            child: TextFormField(
+                                onSaved: (value) {
+                                  rentPrice = int.parse(value!);
+                                },
+                                decoration: const InputDecoration(
+                                  labelText: 'Rent Price per day',
+                                ),
+                                //input type is number
+                                keyboardType: TextInputType.number,
+                                validator: (value) {
+                                  if (value!.isEmpty) {
+                                    return 'Please enter rent price';
+                                  }
+                                  
+                                  return null;
+                                },
+                              ),
+                          )
+                          : SizedBox(
+                            width: 150.0,
+                            child: TextFormField(
+                              
+                                onSaved: (value) {
+                                  price =int.parse(value!);
+                                },
+                                decoration: const InputDecoration(
+                                  labelText: 'Price for Sale',
+                                  hintText: 'Enter Price',
+                                ),
+                                keyboardType: TextInputType.number,
+                                validator: (value) {
+                                  if (value!.isEmpty) {
+                                    return 'Please enter price';
+                                  }
+                                  return null;
+                                },
+                              ),
+                          ),]
+                      ),
                             rentOrSell == 'Buy' || rentOrSell == 'Both'?
                             TextFormField(
                               onSaved: (value) {
                                 price = int.parse(value!);
                               },
                               decoration: const InputDecoration(
-                                labelText: 'Price',
+                                labelText: 'Price for Sale',
                                 hintText: 'Enter Price',
                               ),
                               keyboardType: TextInputType.number,
@@ -277,6 +317,7 @@ class _AddBookState extends State<AddBook> {
                                 return null;
                               },
                             ):Container(),
+                        
                       //description of book
                       TextFormField(
                         onSaved: (value) {
@@ -302,7 +343,7 @@ class _AddBookState extends State<AddBook> {
                           ? Stack(
                               alignment: Alignment.topRight,
                               children: <Widget>[
-                                Container(
+                                SizedBox(
                                   height: 200,
                                   width: 200,
                                   child: Image.file(imageFile!),
@@ -366,7 +407,7 @@ class _AddBookState extends State<AddBook> {
                                   bookName + DateTime.now().toString(),
                                 bookName, authorName, category, rentOrSell,
                                 rentPrice, 0,
-                                   description, imageUrl!, 
+                                   description, imageUrl!, stock
                                   );
                             }
                             else if(rentOrSell == 'Sell') {
@@ -375,7 +416,7 @@ class _AddBookState extends State<AddBook> {
                                   bookName + DateTime.now().toString(),
                                 bookName, authorName, category, rentOrSell,
                                 0, price,
-                                   description, imageUrl!
+                                   description, imageUrl!, stock
                                   );
                             }
                             else {
@@ -384,7 +425,7 @@ class _AddBookState extends State<AddBook> {
                                   bookName + DateTime.now().toString(),
                                 bookName, authorName, category, rentOrSell,
                                 rentPrice, price,
-                                   description, imageUrl!,
+                                   description, imageUrl!, stock
                                   );
                             }
       
@@ -399,7 +440,7 @@ class _AddBookState extends State<AddBook> {
                               
                             
                           }
-                          navigatorKey.currentState?.pushReplacementNamed('/home');
+                          Navigator.pushNamed(context, '/home');
                         }
                         },
                         //decorating the button

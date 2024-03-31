@@ -4,17 +4,17 @@ import 'package:kitaab/Screens/Add/add_book.dart';
 import 'package:kitaab/Screens/Book/book.dart' as bookScreen;
 import 'package:kitaab/Screens/Book/new_books.dart';
 import 'package:kitaab/Screens/Cart/cart.dart';
+import 'package:kitaab/Screens/History/order_history.dart';
 import 'package:kitaab/Screens/Settings/settings.dart';
 import 'package:kitaab/Screens/History/history.dart';
 import 'package:kitaab/Screens/Checkout/checkout.dart';
 import 'package:kitaab/Screens/home_page.dart';
 import 'package:kitaab/Screens/landing_page.dart';
 import 'package:kitaab/Screens/login.dart';
-import 'package:kitaab/Widgets/search.dart';
 
-Route<dynamic> generateRoute(RouteSettings settings) {
+MaterialPageRoute? generateRoute(RouteSettings settings) {
   switch (settings.name) {
-    case '/':
+    case '/landing':
       return MaterialPageRoute(builder: (context) => LandingPage());
     case '/home':
       return MaterialPageRoute(builder: (context) => HomePage());
@@ -37,8 +37,12 @@ Route<dynamic> generateRoute(RouteSettings settings) {
       case '/newBooks':
       return MaterialPageRoute(builder: (context) => NewBooks());
 
+      case '/order_history':
+      return MaterialPageRoute(builder: (context) => OrderHistory(
+        orderId: settings.arguments as String,
+      ));
       
     default:
-      return MaterialPageRoute(builder: (context) => HomePage());
+       return null;
   }
 }

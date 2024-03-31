@@ -73,7 +73,7 @@ void addBook(
   int rentPrice,
   int price,
   String description,
-  String imageUrl,
+  String imageUrl, stock,
   //save date and time
 ) async {
   //add book details to firestore with bookid as document id
@@ -92,12 +92,11 @@ void addBook(
     'description': description,
     'imageUrl': imageUrl,
     'bookTitleUpper': bookTitle.toUpperCase(),
+    'stock': stock,
   });
 }
 
-Future<Image> getImage() async {
-  FirebaseAuth auth = FirebaseAuth.instance;
-  String uid = auth.currentUser!.uid;
+Future<Image> getImage(uid) async {
   Map<String,dynamic> userDoc = (await FirebaseFirestore.instance.collection('users').doc(uid).get()).data()?? {};
       //if image url is not present in firestore, return default image
       if(userDoc['profileImageUrl'] == null){
@@ -107,4 +106,14 @@ Future<Image> getImage() async {
       else{
         return Image.network(userDoc['profileImageUrl']);
       }
+}
+
+getUserDetails(uid) async {
+  Map<String,dynamic> userDoc = (await FirebaseFirestore.instance.collection('users').doc(uid).get()).data()?? {};
+  return userDoc;
+}
+
+getBookDetails (bid) async {
+  Map<String,dynamic> bookDoc = (await FirebaseFirestore.instance.collection('books').doc(bid).get()).data()?? {};
+  return bookDoc;
 }

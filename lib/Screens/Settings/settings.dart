@@ -9,6 +9,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:kitaab/Screens/Book/book.dart';
 import 'package:kitaab/Services/database_services.dart';
 import 'package:kitaab/Services/theme_provider.dart';
 import 'package:kitaab/main.dart';
@@ -113,7 +114,9 @@ class _SettingsState extends State<Settings> {
                           width: 100,
                           padding: const EdgeInsets.fromLTRB(10, 5, 5, 5),
                           child: FutureBuilder<Image>(
-                      future: getImage(),
+                      future: getImage(
+                          FirebaseAuth.instance.currentUser!.uid
+                      ),
                       builder: (BuildContext context,
                           AsyncSnapshot<Image> snapshot) {
                         if (snapshot.connectionState ==
@@ -545,82 +548,100 @@ class MyUploads extends StatelessWidget {
             );
           }
           return ListView(
+            
             children: snapshot.data!.docs.map((DocumentSnapshot document) {
-              return Container(
-                  height: 100,
-                  padding: const EdgeInsets.all(5.0),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(10.0),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.5),
-                        spreadRadius: 5,
-                        blurRadius: 7,
-                        offset: Offset(0, 3),
+              return Material(
+                elevation: 5,
+                child: InkWell(
+                  
+                  child: Container(
+                    margin: const EdgeInsets.only(top: 5.0),
+                      height: 100,
+                      padding: const EdgeInsets.all(5.0),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10.0),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.5),
+                            spreadRadius: 5,
+                            blurRadius: 7,
+                            offset: Offset(0, 3),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  child: Dismissible(
-                    key: Key(document.id), // Unique key for Dismissible widget
-                    direction: DismissDirection.endToStart, // Swipe direction
-                    onDismissed: (direction) {
-                      // Delete the book from the database
-                      deleteData('books', document.id);
-                    },
-                    background: Container(
-                      alignment: Alignment.centerRight,
-                      padding: EdgeInsets.only(right: 20.0),
-                      color: Colors.red,
-                      child: const Icon(Icons.delete, color: Colors.white),
-                    ),
-                    child: Column(
-                      children: [
-                        Row(
+                      child: Dismissible(
+                        key: Key(document.id), // Unique key for Dismissible widget
+                        direction: DismissDirection.startToEnd, // Swipe direction
+                        onDismissed: (direction) {
+                          // Delete the book from the database
+                          deleteData('books', document.id);
+                        },
+                        background: Container(
+                          alignment: Alignment.centerLeft,
+                          padding: EdgeInsets.only(left: 20.0),
+                          color: Colors.red[400],
+                          child: const Icon(Icons.delete, color: Colors.white),
+                        ),
+                        child: Column(
                           children: [
-                            Container(
-                              height: 80,
-                              width: 80,
-                              padding: const EdgeInsets.fromLTRB(10, 5, 5, 5),
-                              child: Image.network(
-                                document['imageUrl'],
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                            const SizedBox(
-                              width: 20,
-                            ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-
+                            Row(
                               children: [
-                            Text(
-                              document['bookTitle'],
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
+                                Container(
+                                  height: 80,
+                                  width: 80,
+                                  padding: const EdgeInsets.fromLTRB(10, 5, 5, 5),
+                                  child: Image.network(
+                                    document['imageUrl'],
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                                const SizedBox(
+                                  width: 20,
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                  
+                                  children: [
+                                Text(
+                                  document['bookTitle'],
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    color: Colors.black,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  document['bookAuthor'],
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                                ]),
+                  
+                                //show slide to delete button
+                                const Spacer(),
+                                Text('Swipe to delete', style: TextStyle(color: Colors.red,
+                                fontSize: 15, fontWeight: FontWeight.bold
+                                ),),
+                                Icon(Icons.arrow_forward_ios, color: Colors.red,),
+                  
+                                  
+                                
+                              ],
                             ),
-                            Text(
-                              document['bookAuthor'],
-                              style: const TextStyle(
-                                fontSize: 15,
-                              ),
-                            ),
-                            ]),
-
-                            //show slide to delete button
-                            const Spacer(),
-                            Text('Swipe to delete', style: TextStyle(color: Colors.red),),
-                            Icon(Icons.arrow_forward_ios, color: Colors.red,),
-
-                              
-                            
                           ],
                         ),
-                      ],
-                    ),
-                  ));
+                      )),
+                      onTap:  () {
+                        //navigate to book details page
+                        navigatorKey.currentState!.push(MaterialPageRoute(builder: (context) {
+                          return Book(bid: document.id);
+                        }));
+                      },
+                ),
+              );
             }).toList(),
           );
         },

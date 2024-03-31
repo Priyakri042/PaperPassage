@@ -61,6 +61,8 @@ dependencies:
   uuid: ^4.3.3
   quantupi: ^0.0.6
   flutter_pay_upi: ^0.2.1
+  bubble: ^1.2.1
+  sliding_up_panel: ^2.0.0+1
 
 dev_dependencies:
   flutter_test:
@@ -97,6 +99,7 @@ flutter:
      - assets/images/Category/fantasy.jpg
      - assets/images/Category/science-fiction.jpeg
      - assets/images/Category/thriller.jpg
+     - assets/images/chat.png
 
 
 
