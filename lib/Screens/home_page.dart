@@ -10,7 +10,6 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 import 'package:kitaab/Screens/Book/book.dart';
-import 'package:kitaab/Widgets/search.dart';
 import 'package:kitaab/main.dart';
 import 'package:kitaab/navigation_bar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -92,17 +91,6 @@ class _HomePageState extends State<HomePage> {
                               snapshot.data!.docs[index];
                           Book book = Book.getBookDetails(document);
                           return Container(
-                            decoration: BoxDecoration(
-                              color: Colors.brown[200],
-                              borderRadius: BorderRadius.circular(10),
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Colors.brown,
-                                  blurRadius: 5,
-                                  offset: Offset(0, 3),
-                                ),
-                              ],
-                            ),
                             child: BookCard(book: book),
                           );
                         },
@@ -151,7 +139,6 @@ class _HomePageState extends State<HomePage> {
     'Romance',
     'Science Fiction',
     'Thriller'
-    
   ];
 
   Stream<QuerySnapshot> filteredBookStream = Stream.empty();
@@ -159,15 +146,15 @@ class _HomePageState extends State<HomePage> {
   filterBooks(TextEditingController searchTerm) {
     //filter books based on search term
     if (searchTerm.text.isNotEmpty) {
-
       setState(() {
-
         isChanged = true;
         filteredBookStream = FirebaseFirestore.instance
-             .collection('books')
-              .where('bookTitleUpper', isGreaterThanOrEqualTo: searchTerm.text.toUpperCase())
-              .where('bookTitleUpper', isLessThan: searchTerm.text.toUpperCase() + 'z')
-              .snapshots();
+            .collection('books')
+            .where('bookTitleUpper',
+                isGreaterThanOrEqualTo: searchTerm.text.toUpperCase())
+            .where('bookTitleUpper',
+                isLessThan: searchTerm.text.toUpperCase() + 'z')
+            .snapshots();
       });
     } else {
       setState(() {
@@ -197,8 +184,6 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        // return to home page
-        navigatorKey.currentState?.pushReplacementNamed('/home');
         return true;
       },
       child: Scaffold(
@@ -307,7 +292,6 @@ class _HomePageState extends State<HomePage> {
                                 child: TextField(
                                   style: const TextStyle(
                                     color: Colors.brown,
-                                    
                                   ),
                                   controller: _controller,
                                   onChanged: (value) {
@@ -317,13 +301,12 @@ class _HomePageState extends State<HomePage> {
                                       filterBooks(_controller);
                                     });
                                   },
-                                  decoration:  InputDecoration(
+                                  decoration: InputDecoration(
                                     hintText: 'Search for books',
                                     hintStyle: const TextStyle(
                                       color: Colors.brown,
                                     ),
                                     border: InputBorder.none,
-                                    
                                   ),
                                 ),
                               ),
@@ -384,7 +367,10 @@ class _HomePageState extends State<HomePage> {
                               }
                               return Container(
                                 height: 250,
-                                child: ListView.builder(
+                                child: ListView.separated(
+                                  separatorBuilder:
+                                      (BuildContext context, int index) =>
+                                          const SizedBox(width: 3),
                                   padding:
                                       const EdgeInsets.fromLTRB(0, 10, 0, 10),
                                   scrollDirection: Axis.horizontal,
@@ -436,56 +422,56 @@ class _HomePageState extends State<HomePage> {
                         itemBuilder: (BuildContext context, int index) {
                           String category = categories[index];
                           Image imagePath = images[category]!;
-                          return Container(
-                            decoration: BoxDecoration(
-                              image: DecorationImage(
-                                image: imagePath.image,
-                                fit: BoxFit.cover,
-                                colorFilter: ColorFilter.mode(
-                                    Colors.black.withOpacity(0.5),
-                                    BlendMode.darken),
-                              ),
-                              color: Colors.brown[
-                                  200], // Change this to your desired background color
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: Colors
-                                    .brown, // Change this to your desired border color
-                                width:
-                                    2, // Change this to your desired border width
-                              ),
-
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Colors.brown,
-                                  blurRadius: 5,
-                                  offset: Offset(0, 3),
+                          return InkWell(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                image: DecorationImage(
+                                  image: imagePath.image,
+                                  fit: BoxFit.cover,
+                                  colorFilter: ColorFilter.mode(
+                                      Colors.black.withOpacity(0.5),
+                                      BlendMode.darken),
                                 ),
-                              ],
-                              //faded background
+                                color: Colors.brown[
+                                    200], // Change this to your desired background color
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: Colors
+                                      .brown, // Change this to your desired border color
+                                  width:
+                                      2, // Change this to your desired border width
+                                ),
 
-                              backgroundBlendMode: BlendMode.darken,
-                            ),
-                            child: InkWell(
-                              //background image
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Colors.brown,
+                                    blurRadius: 5,
+                                    offset: Offset(0, 3),
+                                  ),
+                                ],
+                                //faded background
 
-                              splashColor: Colors.brown[200],
-                              borderRadius: BorderRadius.circular(10),
-                              onTap: () {
-                                _showModalBottomSheet(
-                                    context, categories[index]);
-                              },
+                                backgroundBlendMode: BlendMode.darken,
+                              ),
                               child: Center(
-                                child: Text(
-                                  categories[index],
-                                  style: const TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
+                                child: TextButton(
+                                  onPressed: () {
+                                    _showModalBottomSheet(context, category);
+                                  },
+                                  child: Text(
+                                    category,
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
+                            onTap: () {
+                              _showModalBottomSheet(context, category);
+                            },
                           );
                         },
                       ),
@@ -542,70 +528,77 @@ class _HomePageState extends State<HomePage> {
                                         snapshot.data!.docs[index];
                                     Book book = Book.getBookDetails(document);
 
-
-
-                                    return 
-                                    //if no books found
-                                    snapshot.data!.docs.length == 0
-                                     ?
-                                    Container(
-                                      child: Center(
-                                        child: Text('No books found', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black)),
-                                      ),
-                                    
-                                    ):
-                                    
-                                    Container(
-                                      margin: const EdgeInsets.only(bottom: 10),
-                                      decoration: BoxDecoration(
-                                        color: Colors.brown[100],
-                                        borderRadius: BorderRadius.circular(10),
-                                        boxShadow: const [
-                                          BoxShadow(
-                                            color: Colors.black,
-                                            blurRadius: 5,
-                                            offset: Offset(0, 3),
-                                          ),
-                                        ],
-                                      ),
-                                      child: TextButton(
-                                        onPressed: () {
-                                          Navigator.pushNamed(context, '/book',
-                                              arguments: book.bid);
-                                        },
-                                        child: Row(
-                                          children: [
-                                            Text(
-                                              book.title,
-                                              style: const TextStyle(
-                                                fontSize: 15,
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.black,
-                                              ),
-                                            ),
-                                            const Spacer(),
-                                            book.forRent == 'Rent'
-                                                ? Text(
-                                                    ' \Rs.${(book.rentPrice).toInt().toString()}/day',
-                                                    style: const TextStyle(
-                                                        fontSize: 15,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color: Colors.black),
-                                                  )
-                                                : Text(
-                                                    ' \Rs. ${book.price.toString()}',
-                                                    style: const TextStyle(
-                                                        fontSize: 15,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color: Colors.black),
+                                    return
+                                        //if no books found
+                                        snapshot.data!.docs.length == 0
+                                            ? Container(
+                                                child: Center(
+                                                  child: Text('No books found',
+                                                      style: TextStyle(
+                                                          fontSize: 20,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          color: Colors.black)),
+                                                ),
+                                              )
+                                            : Container(
+                                                margin: const EdgeInsets.only(
+                                                    bottom: 10),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.brown[100],
+                                                  borderRadius:
+                                                      BorderRadius.circular(10),
+                                                  boxShadow: const [
+                                                    BoxShadow(
+                                                      color: Colors.black,
+                                                      blurRadius: 5,
+                                                      offset: Offset(0, 3),
+                                                    ),
+                                                  ],
+                                                ),
+                                                child: TextButton(
+                                                  onPressed: () {
+                                                    Navigator.pushNamed(
+                                                        context, '/book',
+                                                        arguments: book.bid);
+                                                  },
+                                                  child: Row(
+                                                    children: [
+                                                      Text(
+                                                        book.title,
+                                                        style: const TextStyle(
+                                                          fontSize: 15,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          color: Colors.black,
+                                                        ),
+                                                      ),
+                                                      const Spacer(),
+                                                      book.forRent == 'Rent'
+                                                          ? Text(
+                                                              ' \Rs.${(book.rentPrice).toInt().toString()}/day',
+                                                              style: const TextStyle(
+                                                                  fontSize: 15,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  color: Colors
+                                                                      .black),
+                                                            )
+                                                          : Text(
+                                                              ' \Rs. ${book.price.toString()}',
+                                                              style: const TextStyle(
+                                                                  fontSize: 15,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  color: Colors
+                                                                      .black),
+                                                            ),
+                                                    ],
                                                   ),
-                                          ],
-                                        ),
-
-                                      ),
-                                    );
+                                                ),
+                                              );
                                   },
                                 ),
                               ),
@@ -618,7 +611,7 @@ class _HomePageState extends State<HomePage> {
                 : Container(
                     height: 0,
                     width: 0,
-              ),
+                  ),
           ],
         ),
         bottomNavigationBar: bottomAppBar(),
@@ -649,80 +642,130 @@ class BookCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              //clicable book card
-              InkWell(
-                onTap: () {
-                  Navigator.pushNamed(context, '/book', arguments: book.bid);
-                },
-                child: Container(
-                  width: 120,
-                  height: 120,
-                  child: Image.network(
-                    book.imageUrl,
-                    height: 100,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-              //book title and price
-              const SizedBox(height: 10),
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
-                  child: Column(
-                    children: [
-                      Center(
-                        child: Container(
-                          height: 50,
-                          child: Marquee(
-                            text: book.title + ' by ' + book.author,
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                            ),
-                            scrollAxis: Axis.vertical,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            blankSpace: 5.0,
-                            velocity: 10.0,
-                            //pause after 2 rounds
-                            startAfter: const Duration(seconds: 1),
+      child: GestureDetector(
+        child: Container(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Card(
+                      elevation: 5,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Container(
+                        width: 120,
+                        height: 120,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Image.network(
+                            book.imageUrl,
+                            height: 100,
+                            fit: BoxFit.cover,
+                           //filter color
+                            color: book.stock == 0 ? Colors.grey : null,
+                            colorBlendMode: book.stock == 0
+                                ? BlendMode.saturation
+                                : BlendMode.dstATop,
                           ),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                    //book title and price
+                    const SizedBox(height: 10),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
+                        child: Column(
+                          children: [
+                            Center(
+                              child: Container(
+                                height: 50,
+                                child: Marquee(
+                                  text: book.title + ' by ' + book.author,
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: book.stock == 0
+                                        ? Colors.grey[800]
+                                        : Colors.black,
+                                  ),
+                                  scrollAxis: Axis.vertical,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  blankSpace: 5.0,
+                                  velocity: 10.0,
+                                  //pause after 2 rounds
+                                  startAfter: const Duration(seconds: 1),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const Spacer(),
+                book.stock == 0? 
+                    Text(
+                      'Out of stock',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey[800],
+                      ),
+                    )
+                    :
+                   Flexible(
+                        child: book.forRent == 'Rent'
+                            ? Text(
+                                ' \Rs.${(book.rentPrice).toInt().toString()}/day',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: book.stock == 0
+                                      ? Colors.grey[800]
+                                      : Colors.black,
+                                ),
+                              )
+                            : Text(
+                                ' \Rs. ${book.price.toString()}',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: book.stock == 0
+                                      ? Colors.grey[800]
+                                      : Colors.black,
+                                ),
+                              )),
+                    const SizedBox(
+                      height: 10,
+                    )
+                  ],
                 ),
               ),
-              const Spacer(),
-              Flexible(
-                  child: book.forRent == 'Rent'
-                      ? Text(
-                          ' \Rs.${(book.rentPrice).toInt().toString()}/day',
-                          style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black),
-                        )
-                      : Text(
-                          ' \Rs. ${book.price.toString()}',
-                          style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black),
-                        )),
-              const SizedBox(
-                height: 10,
-              )
-            ],
-          ),
-        ),
+            ),
+            decoration: BoxDecoration(
+              color: book.stock == 0 ? Colors.grey : Colors.brown[100],
+              borderRadius: BorderRadius.circular(10),
+              boxShadow: const [
+                BoxShadow(
+                  color: Colors.brown,
+                  blurRadius: 3,
+                  offset: Offset(0, 3),
+                ),
+              ],
+            )),
+        // on tap navigate to book details page
+        onTap: () {
+          book.stock == 0
+              ? ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Book out of stock'),
+                  ),
+                )
+              : Navigator.pushNamed(context, '/book', arguments: book.bid);
+        },
       ),
     );
   }
@@ -739,6 +782,7 @@ class Book {
   String imageUrl;
   DateTime date;
   int rentPrice;
+  int stock;
 
   Book({
     required this.bid,
@@ -751,6 +795,7 @@ class Book {
     required this.description,
     required this.imageUrl,
     required this.date,
+    required this.stock,
   });
 
   //data from firestore
@@ -767,6 +812,7 @@ class Book {
       description: document.get('description'),
       imageUrl: document.get('imageUrl'),
       date: (document.get('date') as Timestamp).toDate(),
+      stock: document.get('stock'),
     );
   }
 }

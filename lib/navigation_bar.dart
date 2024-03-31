@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:kitaab/Screens/Add/add_book.dart';
@@ -71,7 +72,9 @@ BottomAppBar bottomAppBar() {
 
             //profile image
             icon: FutureBuilder<Image>(
-              future: getImage(),
+              future: getImage(
+                  FirebaseAuth.instance.currentUser!.uid
+              ),
               builder: (BuildContext context, AsyncSnapshot<Image> snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return Container();// or some placeholder
@@ -80,7 +83,9 @@ BottomAppBar bottomAppBar() {
                     return Icon(Icons.error); // or some error widget
                   } else {
                     return FutureBuilder<Image>(
-                      future: getImage(),
+                      future: getImage(
+                          FirebaseAuth.instance.currentUser!.uid
+                      ),
                       builder: (BuildContext context,
                           AsyncSnapshot<Image> snapshot) {
                         if (snapshot.connectionState ==

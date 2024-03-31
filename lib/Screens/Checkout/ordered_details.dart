@@ -109,7 +109,6 @@ class _OrderedDetailsState extends State<OrderedDetails>
               if (snapshot.hasData) {
                 final orderData = snapshot.data!.data() ?? {};
       
-                print('Data Available: $orderData');
       
                 return Container(
                   padding: EdgeInsets.all(20),
@@ -133,13 +132,13 @@ class _OrderedDetailsState extends State<OrderedDetails>
                     children: [
                       Text('Order ID: ${orderData['orderId']}',
                           style: TextStyle(
-                              fontSize: 15, fontWeight: FontWeight.bold)),
+                              fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black)),
                       Text('Order Date: ${orderData['orderDate']}',
                           style: TextStyle(
-                              fontSize: 15, fontWeight: FontWeight.bold)),
+                              fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black)),
                       Text('Order Total: ${orderData['totalAmount']}',
                           style: TextStyle(
-                              fontSize: 15, fontWeight: FontWeight.bold)),
+                              fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black)),
                     ],
                   ),
                 );

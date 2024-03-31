@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 class OrderSummary extends StatelessWidget {
   const OrderSummary({super.key});
 
-  Future<QuerySnapshot> getCartDetails() async {
+ static Future<QuerySnapshot> getCartDetails() async {
     return await FirebaseFirestore.instance
         .collection('users')
         .doc(FirebaseAuth.instance.currentUser!.uid)

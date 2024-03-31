@@ -21,18 +21,20 @@ void main() async {
   await FirebaseAppCheck.instance.activate();
   SharedPreferences prefs = await SharedPreferences.getInstance();
   bool isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+  bool isFreshUser = prefs.getBool('isFreshUser') ?? true;
   // await Firebase.initializeApp();
   runApp(
     ChangeNotifierProvider(
       create: (context) => ThemeProvider(),
-      child: MyApp(isLoggedIn: isLoggedIn),
+      child: MyApp(isLoggedIn: isLoggedIn, isFreshUser: isFreshUser),
     ),
   );
 }
 
 class MyApp extends StatelessWidget {
    bool isLoggedIn = false;
-  MyApp({required this.isLoggedIn});
+   bool isFreshUser = true;
+  MyApp({required this.isLoggedIn, required this.isFreshUser});
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -40,7 +42,7 @@ class MyApp extends StatelessWidget {
       theme: Provider.of<ThemeProvider>(context).currentTheme,
       navigatorKey: navigatorKey,
       scaffoldMessengerKey: ScaffoldMessengerKey,
-      initialRoute:  isLoggedIn ? '/home' : '/login',
+      initialRoute: isFreshUser?'/landing' : isLoggedIn ? '/home' : '/login',
       onGenerateRoute: generateRoute,
     );
   }

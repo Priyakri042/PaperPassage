@@ -41,7 +41,7 @@ class _CartState extends State<Cart> {
       RefreshController(initialRefresh: false);
   void _onRefresh() async {
     // monitor network fetch
-    await Future.delayed(Duration(milliseconds: 1000));
+    await Future.delayed(const Duration(milliseconds: 1000));
     // if failed,use refreshFailed()
     setState(() {});
     _refreshController.refreshCompleted();
@@ -84,12 +84,12 @@ class _CartState extends State<Cart> {
           future: isCart(),
           builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return CircularProgressIndicator();
+              return const LinearProgressIndicator();
             } else if (snapshot.hasError) {
               return Text('Error: ${snapshot.error}');
             } else {
               return snapshot.data!
-                  ? Center(
+                  ? const Center(
                       child: Text(
                           'Cart is essentially empty. Add some books to cart!'),
                     )
@@ -102,11 +102,10 @@ class _CartState extends State<Cart> {
                         children: [
                           Expanded(child: CartList()),
                           TotalPrice(),
-                          SizedBox(
+                          const SizedBox(
                             height: 10.0,
                           ),
-                          
-                          SizedBox(
+                          const SizedBox(
                             height: 10.0,
                           )
                         ],
@@ -120,7 +119,6 @@ class _CartState extends State<Cart> {
     );
   }
 }
-
 
 class CartList extends StatelessWidget {
   late int days = 10;
@@ -141,7 +139,7 @@ class CartList extends StatelessWidget {
           builder:
               (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
             if (snapshot.hasError) {
-              return Text('Something went wrong');
+              return const Text('Something went wrong');
             }
 
             if (snapshot.connectionState == ConnectionState.waiting) {
@@ -149,7 +147,7 @@ class CartList extends StatelessWidget {
                   const SizedBox();
             }
             if (snapshot.data!.docs.isEmpty) {
-              return Center(
+              return const Center(
                 child: Text('Cart is empty'),
               );
             }
@@ -162,12 +160,12 @@ class CartList extends StatelessWidget {
 
             // Now you can use cartItems to build your list
             return Container(
-              margin: EdgeInsets.all(10.0),
+              margin: const EdgeInsets.all(10.0),
               child: ListView.separated(
-                padding: EdgeInsets.all(10.0),
+                padding: const EdgeInsets.all(10.0),
                 itemCount: cartItems.length,
                 separatorBuilder: (BuildContext context, int index) {
-                  return SizedBox(
+                  return const SizedBox(
                     height: 10.0,
                   );
                 },
@@ -180,7 +178,7 @@ class CartList extends StatelessWidget {
                     builder: (BuildContext context,
                         AsyncSnapshot<DocumentSnapshot> snapshot) {
                       if (snapshot.hasError) {
-                        return Text('Something went wrong');
+                        return const Text('Something went wrong');
                       }
 
                       if (snapshot.connectionState == ConnectionState.waiting) {
@@ -198,8 +196,8 @@ class CartList extends StatelessWidget {
                               color: Colors.brown[200]!.withOpacity(0.5),
                               spreadRadius: 5,
                               blurRadius: 7,
-                              offset:
-                                  Offset(3, 3), // changes position of shadow
+                              offset: const Offset(
+                                  3, 3), // changes position of shadow
                             ),
                           ],
                         ),
@@ -219,24 +217,25 @@ class CartList extends StatelessWidget {
                                     });
 
                             // Show a snackbar
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                content: Text('Book removed from cart')));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text('Book removed from cart')));
                           },
                           background: Container(
-                              padding: EdgeInsets.only(right: 20.0),
+                              padding: const EdgeInsets.only(right: 20.0),
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(10),
                                 color: Colors.brown[400],
                               ),
                               alignment: Alignment.centerRight,
-                              child: Icon(Icons.delete)),
+                              child: const Icon(Icons.delete)),
                           child: Container(
-                            padding: EdgeInsets.all(10.0),
+                            padding: const EdgeInsets.all(10.0),
                             child: Row(
                               children: [
                                 Container(
-                                  padding: EdgeInsets.all(5.0),
-                                  margin: EdgeInsets.all(5.0),
+                                  padding: const EdgeInsets.all(5.0),
+                                  margin: const EdgeInsets.all(5.0),
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(10.0),
                                     boxShadow: [
@@ -244,7 +243,7 @@ class CartList extends StatelessWidget {
                                         color: Colors.grey.withOpacity(0.5),
                                         spreadRadius: 3,
                                         blurRadius: 5,
-                                        offset: Offset(
+                                        offset: const Offset(
                                             0, 3), // changes position of shadow
                                       ),
                                     ],
@@ -257,19 +256,19 @@ class CartList extends StatelessWidget {
                                     //border radius for image
                                   ),
                                 ),
-                                SizedBox(
+                                const SizedBox(
                                     width:
                                         10), // Add some spacing between the image and the text
                                 Expanded(
                                   // Use Expanded to avoid overflow
                                   child: Text(
                                     snapshot.data!.get('bookTitle'),
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                         color: Colors.black,
                                         fontWeight: FontWeight.bold),
                                   ),
                                 ),
-                                Spacer(),
+                                const Spacer(),
                                 Expanded(
                                   child: TrailWidget(
                                     price: snapshot.data!.get('price'),
@@ -323,170 +322,212 @@ class _TrailWidgetState extends State<TrailWidget> {
         .doc(FirebaseAuth.instance.currentUser!.uid)
         .collection('cart')
         .doc(widget.bid);
-return FutureBuilder<DocumentSnapshot>(
-    future: cart.get(),
-    builder: (BuildContext context, AsyncSnapshot<DocumentSnapshot> snapshot) {
-      if (snapshot.connectionState == ConnectionState.waiting) {
-        return LinearProgressIndicator(
-            backgroundColor: Colors.brown[200],
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.brown[400]!)
+    return FutureBuilder<DocumentSnapshot>(
+        future: cart.get(),
+        builder:
+            (BuildContext context, AsyncSnapshot<DocumentSnapshot> snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return LinearProgressIndicator(
+                backgroundColor: Colors.brown[200],
+                valueColor: AlwaysStoppedAnimation<Color>(Colors
+                    .brown[400]!)); // Show a loading spinner while waiting
+          } else if (snapshot.hasError) {
+            return Text(
+                'Error: ${snapshot.error}'); // Show error message if something went wrong
+          } else {
+            // The Future has completed successfully, we can now access the data
+            Map<String, dynamic>? data =
+                snapshot.data!.data() as Map<String, dynamic>?;
 
-        ); // Show a loading spinner while waiting
-      } else if (snapshot.hasError) {
-        return Text('Error: ${snapshot.error}'); // Show error message if something went wrong
-      } else {
-        // The Future has completed successfully, we can now access the data
-        Map<String, dynamic>? data = snapshot.data!.data() as Map<String, dynamic>?;
-
-    if (widget.isRent) {
-      return Container(
-        height: 100,
-        width: double.infinity,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            //want a drop down menu to select the number of days starting from 10 days
-            widget.isRent
-                ? Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10.0),
-                    ),
-                    child: Row(
-                      children: [
-                        IconButton(
-                          icon: Icon(Icons.calendar_month),
-                          onPressed: () {
-                            showModalBottomSheet(
-                              context: context,
-                              isDismissible:true,
-                              builder: (BuildContext context) {
-                                return Container(
-                                  height: 250,
-                                  padding: EdgeInsets.all(10.0),
-                                  child: Column(
-                                    children: [
-                                      SizedBox(
-                                        height: 20,),
-                                      Text(
-                                        'Select the number of days',
-                                        style: TextStyle(
-                                          color: Colors.black,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      SizedBox(
-                                        height: 20,
-                                      ),
-                                      Container(
-                                        height: 100,
-                                        padding: EdgeInsets.all(0),
-                                        child: CupertinoPicker(
-                                          itemExtent: 30,
-                                          onSelectedItemChanged: (int index) {
-                                            days = index + 10;
-                                          },
-                                          children: List.generate(
-                                              21,
-                                              (index) => Text(
-                                                    '${index + 10} days',
-                                                    style: TextStyle(
-                                                      color: Colors.black,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                          fontSize:  20.0,
-                                                    ),
-                                                  )
-                                                  
-                                                  ),
-                                        ),
-                                      ),
-                                      ElevatedButton(
-                                        onPressed: () {
-                                          firestore
-                                              .collection('users')
-                                              .doc(FirebaseAuth
-                                                  .instance.currentUser!.uid)
-                                              .collection('cart')
-                                              .doc(widget.bid)
-                                              .set(
-                                            {
-                                              'days': days,
-                                              'total': widget.rentPrice * days
-                                            },
-                                            SetOptions(merge: true),
-                                          );
-
-                                          Navigator.pop(context);
-                                        },
-                                        child: Text('Save',
-                                            style: TextStyle(
-                                                color: Colors.brown,
-                                                fontWeight: FontWeight.bold),
-                                      ),
-                                      )
-                                    ],
-                                  ),
-                                );
-                              },
-                            );
-                          },
-                        ),
-                        Container(
-                          height: 30,
-                          alignment: Alignment.center,
-                          child: Text(
-                            data!['days'] == null
-                                ? '10 days'
-                                : '${data['days']} days',
-                            
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontWeight: FontWeight.bold,
+            if (widget.isRent) {
+              return Container(
+                height: 100,
+                width: double.infinity,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    //want a drop down menu to select the number of days starting from 10 days
+                    widget.isRent
+                        ? Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10.0),
+                              color: Colors.white,
+                              
                             ),
-                          ),
-                          
-                        ),
-                      ],
-                    ),
-                  )
-                : Container(),
-            Text( widget.isRent
-                ? '₹${data!['total'] == null ? widget.rentPrice * days : '${data['total']} (${data['rentPrice']}/day) '}'
-                : '₹${widget.price}',
-                style: TextStyle(
-                  color: Colors.black,
-                  fontWeight: FontWeight.bold,
-                ),
-              
-            ),
-            SizedBox(
-              height: 5,
-            ),
-          ],
-        ),
-      );
-    } else {
-      return Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            data!['total'] == null ? '₹${widget.price}' : '₹${data['total']}',
-            style: TextStyle(
-              color: Colors.black,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      );
-    }
-  }
-        });
+                            child: Row(
+                              children: [
+                                Container(
+                                  height: 30,
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    data!['days'] == null
+                                        ? '10 days'
+                                        : '${data['days']} days',
+                                    style: const TextStyle(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: Icon(
+                                    Icons.calendar_month,
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    foregroundColor: Colors.brown[400],
+                                    backgroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10.0),
+                                    ),
+                                    elevation: 3,
+                                    shadowColor: Colors.brown,
+                                    splashFactory: InkRipple.splashFactory,
+                                     
 
+                                  ),
+                                  onPressed: () {
+                                    showModalBottomSheet(
+                                      
+                                      context: context,
+                                      isDismissible: true,
+                                      builder: (BuildContext context) {
+                                        return Container(
+                                          color: Colors.white,
+                                          height: 250,
+                                          padding: const EdgeInsets.all(10.0),
+                                          child: Column(
+                                            children: [
+                                              const SizedBox(
+                                                height: 20,
+                                              ),
+                                              const Text(
+                                                'Select the number of days',
+                                                style: TextStyle(
+                                                  color: Colors.black,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                              const SizedBox(
+                                                height: 20,
+                                              ),
+                                              Container(
+                                                decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.circular(10.0),
+                                                  color: Colors.white,
+                                                  boxShadow: [
+                                                    BoxShadow(
+                                                      color: Colors.brown[200]!
+                                                          .withOpacity(0.5),
+                                                      spreadRadius: 5,
+                                                      blurRadius: 7,
+                                                      offset: const Offset(
+                                                          3, 3), // changes position of shadow
+                                                    ),
+                                                  ],
+                                                ),
+                                                height: 100,
+                                                padding:
+                                                    const EdgeInsets.all(0),
+                                                child: CupertinoPicker(
+                                                  itemExtent: 30,
+                                                  onSelectedItemChanged:
+                                                      (int index) {
+                                                    days = index + 10;
+                                                  },
+                                                  children: List.generate(
+                                                      21,
+                                                      (index) => Text(
+                                                            '${index + 10} days',
+                                                            style:
+                                                                const TextStyle(
+                                                              color:
+                                                                  Colors.black,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold,
+                                                              fontSize: 20.0,
+                                                            ),
+                                                          )),
+                                                ),
+                                              ),
+                                              Spacer(),
+                                              ElevatedButton(
+                                                onPressed: () {
+                                                  firestore
+                                                      .collection('users')
+                                                      .doc(FirebaseAuth.instance
+                                                          .currentUser!.uid)
+                                                      .collection('cart')
+                                                      .doc(widget.bid)
+                                                      .set(
+                                                    {
+                                                      'days': days,
+                                                      'total':
+                                                          widget.rentPrice *
+                                                              days
+                                                    },
+                                                    SetOptions(merge: true),
+                                                  );
+
+                                                  Navigator.pop(context);
+                                                },
+                                                child:  Text(
+                                                  'Save',
+                                                  style: TextStyle(
+                                                      color: Colors.brown[200],
+                                                      fontWeight:
+                                                          FontWeight.bold),
+                                                ),
+                                              )
+                                            ],
+                                          ),
+                                        );
+                                      },
+                                    );
+                                  },
+                                ),
+                                
+                              ],
+                            ),
+                          )
+                        : Container(),
+                    Text(
+                      widget.isRent
+                          ? '₹${data!['total'] == null ? widget.rentPrice * days : '${data['total']} (${data['rentPrice']}/day) '}'
+                          : '₹${widget.price}',
+                      style: const TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 5,
+                    ),
+                  ],
+                ),
+              );
+            } else {
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    data!['total'] == null
+                        ? '₹${widget.price}'
+                        : '₹${data['total']}',
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              );
+            }
+          }
+        });
   }
 }
-
-
 
 class TotalPrice extends StatelessWidget {
   FirebaseFirestore firestore = FirebaseFirestore.instance;
@@ -494,7 +535,7 @@ class TotalPrice extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(10.0),
+      padding: const EdgeInsets.all(10.0),
       child: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('users')
@@ -503,7 +544,7 @@ class TotalPrice extends StatelessWidget {
             .snapshots(),
         builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
           if (snapshot.hasError) {
-            return Text('Something went wrong');
+            return const Text('Something went wrong');
           }
 
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -518,11 +559,13 @@ class TotalPrice extends StatelessWidget {
           List<dynamic> cartItems = snapshot.data!.docs;
           int? total = 0;
           for (int i = 0; i < cartItems.length; i++) {
-            total =  total != null? total + cartItems[i]['total'] : cartItems[i]['total'];
-            }
+            total = total != null
+                ? total + cartItems[i]['total']
+                : cartItems[i]['total'];
+          }
 
           return Container(
-            margin: EdgeInsets.all(10.0),
+            margin: const EdgeInsets.all(10.0),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10.0),
               color: Colors.white,
@@ -531,113 +574,51 @@ class TotalPrice extends StatelessWidget {
                   color: Colors.brown[200]!.withOpacity(0.5),
                   spreadRadius: 5,
                   blurRadius: 7,
-                  offset: Offset(3, 3), // changes position of shadow
+                  offset: const Offset(3, 3), // changes position of shadow
                 ),
               ],
             ),
             child: Column(
               children: [
                 Container(
-                  height: 70,
-                  
-                  decoration: BoxDecoration(
-                    
-                    borderRadius: BorderRadius.circular(10.0),
-                    color: Colors.white,
-                   
-                  ),
-                  padding: EdgeInsets.all(10.0),
-            
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            'Total',
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Spacer(),
-                          Text(
-                            '₹$total',
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          
-                        ],
-                      ),
-                      SizedBox(
-                        height: 5.0,
-                      ),
-                      Row(children: [
-                        Text(
-                          'Delivery Charges',
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Spacer(),
-                        Text(
-                          '₹50',
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],)
-                    ],
-                  ),
-                ),
-                
-                Container(
                   height: 50,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10.0),
                     color: Colors.white,
-                   
                   ),
-                  padding: EdgeInsets.all(10.0),
+                  padding: const EdgeInsets.all(10.0),
                   child: Row(
                     children: [
-                      Text(
+                      const Text(
                         'Total Payable',
                         style: TextStyle(
                           color: Colors.black,
                           fontWeight: FontWeight.bold,
-                          fontSize:  20.0,
+                          fontSize: 20.0,
                         ),
                       ),
-                      Spacer(),
+                      const Spacer(),
                       Text(
-                        '₹${total! + 50}',
-                        style: TextStyle(
+                        '₹${total!}',
+                        style: const TextStyle(
                           color: Colors.black,
                           fontWeight: FontWeight.bold,
-                          fontSize:  20.0,
+                          fontSize: 20.0,
                         ),
                       ),
                     ],
                   ),
                 ),
-             Divider(
+                const Divider(
                   color: Colors.brown,
                   thickness: 1,
-             ),
-                
+                ),
                 Container(
-                  padding: EdgeInsets.all(10.0),
-                  
+                  padding: const EdgeInsets.all(10.0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    
                     children: [
                       Expanded(
-                        
                         child: ElevatedButton(
                           onPressed: () {
                             //clear the cart
@@ -654,30 +635,29 @@ class TotalPrice extends StatelessWidget {
                           },
                           //decorating the button
                           //height of button
-                  
+
                           style: ElevatedButton.styleFrom(
                             //shadow of button
                             //height of button
                             elevation: 10,
                             //background color of button
-                  
+
                             backgroundColor: Colors.red[700],
                             foregroundColor: Colors.white,
-                            padding: EdgeInsets.symmetric(
+                            padding: const EdgeInsets.symmetric(
                                 horizontal: 50, vertical: 15),
-                            textStyle: TextStyle(
+                            textStyle: const TextStyle(
                               fontSize: 15,
                             ),
                           ),
-                          child: Text('Clear Cart',
+                          child: const Text('Clear Cart',
                               style: TextStyle(color: Colors.white)),
                         ),
                       ),
-                      SizedBox(
+                      const SizedBox(
                         width: 10.0,
                       ),
                       Expanded(
-                        
                         child: ElevatedButton(
                           onPressed: () {
                             //navigate to checkout page
@@ -685,26 +665,23 @@ class TotalPrice extends StatelessWidget {
                           },
                           //decorating the button
                           //height of button
-                  
+
                           style: ElevatedButton.styleFrom(
                             //shadow of button
                             //height of button
                             elevation: 10,
                             backgroundColor: Colors.green[600],
-                            
+
                             //background color of button
-                  
-                            padding: EdgeInsets.symmetric(
+
+                            padding: const EdgeInsets.symmetric(
                                 horizontal: 50, vertical: 15),
-                            textStyle: TextStyle(
+                            textStyle: const TextStyle(
                               fontSize: 15,
                             ),
                           ),
-                          child: Text('Checkout',
-                              style: TextStyle(color: Colors.white)
-                  
-                      
-                          ),
+                          child: const Text('Checkout',
+                              style: TextStyle(color: Colors.white)),
                         ),
                       ),
                     ],

@@ -54,13 +54,14 @@ class NewBooks extends StatelessWidget {
                             leading: Image.network(books['imageUrl']),
                             title: Text(books['bookTitle']),
                             subtitle: Text(books['bookAuthor']),
-                            trailing: IconButton(
-                              icon: Icon(Icons.add),
-                              onPressed: () {
-                                Navigator.pushNamed(context, '/book',
-                                    arguments: books.id);
-                              },
+                            trailing: Icon(Icons.remove_red_eye, color: 
+                              Colors.brown[800],
+                              
                             ),
+                            onTap: () {
+                                  Navigator.pushNamed(context, '/book',
+                                      arguments: books.id);
+                                },
                           ),
                         ),
                       );
