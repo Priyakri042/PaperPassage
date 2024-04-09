@@ -82,7 +82,7 @@ void addBook(
 
   await books.doc(bid).set({
     'date': DateTime.now(),
-    'uid': uid,
+    'sellerId': uid,
     'bookTitle': bookTitle,
     'bookAuthor': bookAuthor,
     'category': category,

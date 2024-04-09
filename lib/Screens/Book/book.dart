@@ -26,6 +26,8 @@ class _BookState extends State<Book> {
 
   var rating;
 
+  bool isHeartPressed = false;
+
   noOfBooksRead() {
     return FirebaseFirestore.instance
         .collection('books')
@@ -128,6 +130,7 @@ class _BookState extends State<Book> {
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       Container(
                         padding: EdgeInsets.fromLTRB(10, 10, 10, 10),
@@ -143,9 +146,9 @@ class _BookState extends State<Book> {
                             }
                             if (snapshot.connectionState ==
                                 ConnectionState.waiting) {
-                              return CircularProgressIndicator();
+                              return SizedBox();
                             }
-                            return CircularProgressIndicator();
+                            return SizedBox();
                           },
                         ),
                       ),
@@ -160,7 +163,7 @@ class _BookState extends State<Book> {
                                   AsyncSnapshot snapshot) {
                                 if (snapshot.connectionState ==
                                     ConnectionState.waiting) {
-                                  return CircularProgressIndicator(); // or some other widget while waiting
+                                  return SizedBox(); // or some other widget while waiting
                                 } else if (snapshot.hasError) {
                                   return Text('Error: ${snapshot.error}');
                                 } else {
@@ -170,7 +173,8 @@ class _BookState extends State<Book> {
                                       snapshot.data.data()['bookTitle'],
                                       style: TextStyle(
                                           fontSize: 20,
-                                          fontWeight: FontWeight.bold),
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.brown[800]),
                                     ),
                                   );
                                 }
@@ -184,7 +188,7 @@ class _BookState extends State<Book> {
                                   AsyncSnapshot snapshot) {
                                 if (snapshot.connectionState ==
                                     ConnectionState.waiting) {
-                                  return CircularProgressIndicator(); // or some other widget while waiting
+                                  return SizedBox(); // or some other widget while waiting
                                 } else if (snapshot.hasError) {
                                   return Text('Error: ${snapshot.error}');
                                 } else {
@@ -199,45 +203,7 @@ class _BookState extends State<Book> {
                               },
                             ),
 
-                            //               //book rating
-                            // FutureBuilder(
-                            //   future: getBookDetails(),
-                            //   builder: (BuildContext context,
-                            //       AsyncSnapshot snapshot) {
-                            //     if (snapshot.connectionState ==
-                            //         ConnectionState.waiting) {
-                            //       return CircularProgressIndicator(); // or some other widget while waiting
-                            //     } else if (snapshot.hasError) {
-                            //       return Text('Error: ${snapshot.error}');
-                            //     } else {
-                            //       return Row(
-                            //         children: [
-                            //           if (snapshot.data.data()['rating'] == 0 ||
-                            //               snapshot.data.data()['rating'] ==
-                            //                   null)
-                            //             Icon(Icons.star_border,
-                            //                 color: Colors.grey, size: 15)
-                            //           else
-                            //             rating = snapshot.data.data().rating[0],
-                            //             for (int i = 0;
-                            //                 i < snapshot.data.data().rating;
-                            //                 i++)
-                            //               Icon(Icons.star,
-                            //                   color: Colors.yellow),
-                            //           Text(
-                            //             ' (' +
-                            //                 snapshot.data
-                            //                     .data()['noOfRatings']
-                            //                     .toString() +
-                            //                 ')',
-                            //             style: TextStyle(
-                            //                 fontSize: 15, color: Colors.grey),
-                            //           ),
-                            //         ],
-                            //       );
-                            //     }
-                            //   },
-                            // ),
+                            
                           ],
                         ),
                       ),
@@ -252,13 +218,25 @@ class _BookState extends State<Book> {
                             IconButton(
                               onPressed: () {
                                 //add to wishlist
-                                FirebaseFirestore.instance
-                                    .collection('users')
-                                    .doc(FirebaseAuth.instance.currentUser!.uid)
-                                    .collection('wishlist')
-                                    .doc(widget.bid)
-                                    .set({
-                                  'bid': widget.bid,
+                                isHeartPressed
+                                    ? FirebaseFirestore.instance
+                                        .collection('users')
+                                        .doc(FirebaseAuth
+                                            .instance.currentUser!.uid)
+                                        .collection('wishlist')
+                                        .doc(widget.bid)
+                                        .set({
+                                        'bid': widget.bid,
+                                      })
+                                    : FirebaseFirestore.instance
+                                        .collection('users')
+                                        .doc(FirebaseAuth
+                                            .instance.currentUser!.uid)
+                                        .collection('wishlist')
+                                        .doc(widget.bid)
+                                        .delete();
+                                setState(() {
+                                  isHeartPressed = !isHeartPressed;
                                 });
                                 //snackbar to show book added to wishlist
                                 ScaffoldMessenger.of(context).showSnackBar(
@@ -268,8 +246,10 @@ class _BookState extends State<Book> {
                                   ),
                                 );
                               },
-                              icon: Icon(Icons.favorite_border,
-                                  color: Colors.red),
+                              icon: isHeartPressed
+                                  ? Icon(Icons.favorite, color: Colors.red)
+                                  : Icon(Icons.favorite_border,
+                                      color: Colors.red),
                             ),
                             Spacer(),
                             FutureBuilder(
@@ -278,7 +258,7 @@ class _BookState extends State<Book> {
                                     AsyncSnapshot snapshot) {
                                   if (snapshot.connectionState ==
                                       ConnectionState.waiting) {
-                                    return CircularProgressIndicator(); // or some other widget while waiting
+                                    return SizedBox(); // or some other widget while waiting
                                   } else if (snapshot.hasError) {
                                     return Text('Error: ${snapshot.error}');
                                   } else {
@@ -311,10 +291,7 @@ class _BookState extends State<Book> {
               //book description in paragraph
               Text(
                 'Description',
-                style: TextStyle(
-                    fontSize: 15,
-                    color: Colors.brown[800],
-                    fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
               ),
               Container(
                 padding: EdgeInsets.fromLTRB(20, 10, 20, 10),
@@ -322,7 +299,10 @@ class _BookState extends State<Book> {
                   future: getBookDetails(),
                   builder: (BuildContext context, AsyncSnapshot snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
-                      return CircularProgressIndicator(); // or some other widget while waiting
+                      return LinearProgressIndicator(
+                          backgroundColor: Colors.brown
+                              .withOpacity(0.5)); // or some other widget while waiting
+                      
                     } else if (snapshot.hasError) {
                       return Text('Error: ${snapshot.error}');
                     } else {
@@ -364,71 +344,14 @@ class _BookState extends State<Book> {
                       ),
                       Container(
                         height: 250,
-                        // child: ListView.builder(
-                        //   itemCount: 10,
-                        //   itemBuilder: (BuildContext context, int index) {
-                        //     return Container(
-                        //       padding: EdgeInsets.fromLTRB(0, 10, 0, 10),
-                        //       child: Column(
-                        //         crossAxisAlignment: CrossAxisAlignment.start,
-                        //         children: [
-                        //           Row(
-                        //             mainAxisAlignment: MainAxisAlignment.start,
-                        //             children: [
-                        //               CircleAvatar(
-                        //                 radius: 17,
-                        //                 backgroundImage:
-                        //                     AssetImage('assets/images/owl.png'),
-                        //                 backgroundColor: Colors.brown[800],
-                        //               ),
-                        //               SizedBox(
-                        //                 width: 10,
-                        //               ),
-                        //               Column(
-                        //                 crossAxisAlignment:
-                        //                     CrossAxisAlignment.start,
-                        //                 children: [
-                        //                   Text(
-                        //                     'Priya Kumari',
-                        //                     style: TextStyle(
-                        //                         fontSize: 13,
-                        //                         color: Colors.black,
-                        //                         fontWeight: FontWeight.bold),
-                        //                   ),
-                        //                   Row(
-                        //                     children: [
-                        //                       for (int i = 0; i < 5; i++)
-                        //                         Icon(
-                        //                           Icons.star,
-                        //                           color: Colors.yellow,
-                        //                           size: 13,
-                        //                         ),
-                        //                     ],
-                        //                   ),
-                        //                 ],
-                        //               ),
-                        //             ],
-                        //           ),
-                        //           SizedBox(
-                        //             height: 10,
-                        //           ),
-                        //           Text(
-                        //             'A very good book. I loved it. I would recommend it to everyone.',
-                        //             style: TextStyle(
-                        //                 fontSize: 12, color: Colors.grey[800]),
-                        //           ),
-                        //         ],
-                        //       ),
-                        //     );
-                        //   },
-                        // ),
+                       
                         child: FutureBuilder(
                           future: getReviews(widget.bid),
                           builder:
                               (BuildContext context, AsyncSnapshot snapshot) {
                             if (snapshot.connectionState ==
                                 ConnectionState.waiting) {
-                              return CircularProgressIndicator(); // or some other widget while waiting
+                              return SizedBox(); // or some other widget while waiting
                             } else if (snapshot.hasError) {
                               return Text('Error: ${snapshot.error}');
                             } else if (snapshot.data == null ||
@@ -471,7 +394,7 @@ class _BookState extends State<Book> {
                                                   if (snapshot
                                                           .connectionState ==
                                                       ConnectionState.waiting) {
-                                                    return CircularProgressIndicator(); // or some other widget while waiting
+                                                    return SizedBox(); // or some other widget while waiting
                                                   } else if (snapshot
                                                       .hasError) {
                                                     return Text(
@@ -505,7 +428,7 @@ class _BookState extends State<Book> {
                                                               .connectionState ==
                                                           ConnectionState
                                                               .waiting) {
-                                                        return CircularProgressIndicator(); // or some other widget while waiting
+                                                        return SizedBox(); // or some other widget while waiting
                                                       } else if (snapshot
                                                           .hasError) {
                                                         return Text(
@@ -597,7 +520,7 @@ class _BookState extends State<Book> {
                                   AsyncSnapshot snapshot) {
                                 if (snapshot.connectionState ==
                                     ConnectionState.waiting) {
-                                  return CircularProgressIndicator(); // or some other widget while waiting
+                                  return SizedBox(); // or some other widget while waiting
                                 } else if (snapshot.hasError) {
                                   return Text('Error: ${snapshot.error}');
                                 } else {
@@ -719,7 +642,7 @@ class _BookState extends State<Book> {
                               ),
                             );
                             //pop to home page
-                            Navigator.pop(context);
+                            navigatorKey.currentState?.pushReplacementNamed('/home');
                           }
                         },
                         style: ButtonStyle(
@@ -747,7 +670,7 @@ class _BookState extends State<Book> {
                                     AsyncSnapshot snapshot) {
                                   if (snapshot.connectionState ==
                                       ConnectionState.waiting) {
-                                    return CircularProgressIndicator(); // or some other widget while waiting
+                                    return SizedBox(); // or some other widget while waiting
                                   } else if (snapshot.hasError) {
                                     return Text('Error: ${snapshot.error}');
                                   } else {
@@ -825,7 +748,7 @@ class _BookState extends State<Book> {
                                     AsyncSnapshot snapshot) {
                                   if (snapshot.connectionState ==
                                       ConnectionState.waiting) {
-                                    return CircularProgressIndicator(); // or some other widget while waiting
+                                    return SizedBox(); // or some other widget while waiting
                                   } else if (snapshot.hasError) {
                                     return Text('Error: ${snapshot.error}');
                                   } else {

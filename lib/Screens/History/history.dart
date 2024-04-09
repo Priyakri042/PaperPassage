@@ -92,7 +92,7 @@ class HistoryList extends StatelessWidget {
                               fontWeight: FontWeight.bold,
                               color: Colors.black)),
                       subtitle: Text(
-                          'Order Date: ${snapshot.data!.docs[index]['orderDate']}',
+                          'Order Date: ${(snapshot.data!.docs[index]['orderDate'])}',
                           style: TextStyle(
                             color: Colors.black,
                           )),
@@ -119,6 +119,8 @@ class HistoryList extends StatelessWidget {
         .collection('users')
         .doc(FirebaseAuth.instance.currentUser!.uid)
         .collection('orders')
+        .orderBy('orderDate', descending: true)
         .get();
+      
   }
 }

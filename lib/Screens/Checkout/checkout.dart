@@ -14,6 +14,7 @@ import 'package:kitaab/Screens/Checkout/order_summary.dart';
 import 'package:http/http.dart' as http;
 import 'package:kitaab/Screens/Checkout/ordered_details.dart';
 import 'package:kitaab/Screens/Checkout/upi.dart';
+import 'package:kitaab/Services/database_services.dart';
 import 'package:uuid/uuid.dart';
 
 import '../Cart/cart.dart';
@@ -337,17 +338,18 @@ class _CheckoutState extends State<Checkout> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text('Name: ${data['name']}', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-                                  Text ('Phone: ${data['phone']}', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-                                  Text('Address: ${data['address']}', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-                                  Text('City: ${data['city']}', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-                                  Text('State: ${data['state']}', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-                                  Text('Pincode: ${data['pincode']}', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                                  Text('Name: ${data['name']}', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold,
+                                  color: Colors.black)),
+                                  Text ('Phone: ${data['phone']}', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold,color: Colors.black)),
+                                  Text('Address: ${data['address']}', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold,color: Colors.black)),
+                                  Text('City: ${data['city']}', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold,color: Colors.black)),
+                                  Text('State: ${data['state']}', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold,color: Colors.black)),
+                                  Text('Pincode: ${data['pincode']}', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold,color: Colors.black)),
                                 ],
                               ),
                             );
                           } else {
-                            return const Text('No address found');
+                            return const Text('No address found', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold,color: Colors.black));
                           }
                         }),
                         SizedBox(height: 100),
@@ -386,10 +388,11 @@ class _CheckoutState extends State<Checkout> {
                                       DateTime.now()
                                           .toIso8601String()
                                           .split('T')[0],
-                                  'userId': auth.currentUser!.uid,
+                                  'buyerId': auth.currentUser!.uid,
                                   'totalAmount':
                                       await OrderSummary.getCartTotal() + 60,
                                   'paymentMethod': _paymentMethod,
+                                  'status': 'OrderPlaced',
 
                                 });
 
@@ -412,7 +415,9 @@ class _CheckoutState extends State<Checkout> {
                                   'totalAmount':
                                       await OrderSummary.getCartTotal() + 60,
                                   'status': 'Placed',
+                                  
                                 });
+
                           
                                 var cartDetails =
                                     await OrderSummary.getCartDetails();
@@ -435,6 +440,33 @@ class _CheckoutState extends State<Checkout> {
                                       .get()
                                       .then((value) =>
                                           value.data() as Map<String, dynamic>);
+
+                                  
+
+                                  
+                                  print ('bookDetails: $bookDetails[sellerId]');
+                                  firestore
+                                      .collection('users')
+                                      .doc(bookDetails['sellerId'])
+                                      .collection('soldBooks')
+                                      .add({
+                                    'orderId': orderId,
+                                    'orderDate': DateTime.now()
+                                        .toIso8601String()
+                                        .split('T')[0],
+                                    'totalAmount': bookData['total'] + 60,
+                                    'status': 'Placed',
+                                    'buyerId': auth.currentUser!.uid,
+                                     
+                                  });
+
+                                  firestore.collection('users').doc(bookDetails['sellerId']).collection('soldBooks').doc(orderId).collection('items').doc(bookId).set({
+                                    'bid': bookId,
+                                    'title': bookDetails['bookTitle'],
+                                    'author': bookDetails['bookAuthor'],
+                                    'total': bookData['total'] + 60,
+                                    
+                                  });
                           
                                   firestore
                                       .collection('users')
@@ -448,6 +480,8 @@ class _CheckoutState extends State<Checkout> {
                                     'title': bookDetails['bookTitle'],
                                     'author': bookDetails['bookAuthor'],
                                     'total': bookData['total'] + 60,
+                                    
+                                    'sellerId': bookDetails['sellerId'],
                                   });
                           
                                   //increase the no.of books read according to the bookId
@@ -458,8 +492,9 @@ class _CheckoutState extends State<Checkout> {
                                     'noOfBooksRead': FieldValue.increment(1),
                                     'stock': bookDetails['stock'] - 1,
                                   });
-                                }
-                          
+                                
+                                
+                          }
                                 //clear the cart
                                 firestore
                                     .collection('users')
@@ -474,6 +509,8 @@ class _CheckoutState extends State<Checkout> {
                               } catch (e) {
                                 print(e);
                               }
+
+                              
                           
                               //send order details to the server
                               //send order details to the server

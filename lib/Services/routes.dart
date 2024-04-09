@@ -5,6 +5,7 @@ import 'package:kitaab/Screens/Book/book.dart' as bookScreen;
 import 'package:kitaab/Screens/Book/new_books.dart';
 import 'package:kitaab/Screens/Cart/cart.dart';
 import 'package:kitaab/Screens/History/order_history.dart';
+import 'package:kitaab/Screens/Settings/notifications.dart';
 import 'package:kitaab/Screens/Settings/settings.dart';
 import 'package:kitaab/Screens/History/history.dart';
 import 'package:kitaab/Screens/Checkout/checkout.dart';
@@ -41,6 +42,9 @@ MaterialPageRoute? generateRoute(RouteSettings settings) {
       return MaterialPageRoute(builder: (context) => OrderHistory(
         orderId: settings.arguments as String,
       ));
+
+      case '/notifications':
+      return MaterialPageRoute(builder: (context) => NotificationPage());
       
     default:
        return null;
