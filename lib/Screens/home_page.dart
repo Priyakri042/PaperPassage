@@ -379,6 +379,7 @@ class _HomePageState extends State<HomePage> {
                                       (BuildContext context, int index) {
                                     DocumentSnapshot document =
                                         snapshot.data!.docs[index];
+                                        
                                     Book book = Book.getBookDetails(document);
                                     return BookCard(book: book);
                                   },

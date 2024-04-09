@@ -81,6 +81,7 @@ class _SettingsState extends State<Settings> {
               navigatorKey.currentState?.pushReplacementNamed('/home');
             },
           ),
+          
           title: LayoutBuilder(
             builder: (BuildContext context, BoxConstraints constraints) {
               if (constraints.maxWidth > 600) {
@@ -93,6 +94,37 @@ class _SettingsState extends State<Settings> {
                     backgroundColor: Colors.brown[200],
 
           centerTitle: true,
+          //notification icon
+          actions: [
+              FutureBuilder(
+                future: FirebaseFirestore.instance.collection('users').doc(FirebaseAuth.instance.currentUser!.uid).
+                collection('soldBooks').get(),
+                builder: (BuildContext context, AsyncSnapshot snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  }
+                  if (snapshot.data.docs.length == 0) {
+                    return IconButton(
+                      icon: const Icon(Icons.notifications, size: 20,color: Colors.black ,),
+                      onPressed: () {
+                        //navigate to notifications page
+                        navigatorKey.currentState!.pushNamed('/notifications');
+                      },
+                    );
+                  }
+                  return  IconButton(
+                icon:  Icon(Icons.notifications_active_outlined, size: 20,color: Colors.black ,),
+                onPressed: () {
+                  //navigate to notifications page
+                  navigatorKey.currentState!.pushNamed('/notifications');
+                },
+                            );
+                },
+              ),
+          ],
+          
         ),
         body:
             //show profile details
@@ -366,7 +398,16 @@ class _SettingsState extends State<Settings> {
                         'Change',
                       ),
                     )),
-      
+            ListTile(
+              leading: const Icon(Icons.favorite),
+              title: const Text('My Wishlist',),
+              onTap: () {
+                //navigate to my wishlist page
+                Navigator.push(context, MaterialPageRoute(builder: (context) {
+                  return const MyWishlist();
+                }));
+              },
+            ),
             //my uploads
             ListTile(
               leading: const Icon(Icons.cloud_upload_rounded),
@@ -536,7 +577,7 @@ class MyUploads extends StatelessWidget {
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('books')
-            .where('uid', isEqualTo: FirebaseAuth.instance.currentUser!.uid)
+            .where('sellerId', isEqualTo: FirebaseAuth.instance.currentUser!.uid)
             .snapshots(),
         builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -556,7 +597,7 @@ class MyUploads extends StatelessWidget {
                   
                   child: Container(
                     margin: const EdgeInsets.only(top: 5.0),
-                      height: 100,
+                      height: 150,
                       padding: const EdgeInsets.all(5.0),
                       decoration: BoxDecoration(
                         color: Colors.white,
@@ -590,7 +631,9 @@ class MyUploads extends StatelessWidget {
                                 Container(
                                   height: 80,
                                   width: 80,
-                                  padding: const EdgeInsets.fromLTRB(10, 5, 5, 5),
+                                  padding: const EdgeInsets.fromLTRB(5, 5, 5, 5),
+                                  margin: const EdgeInsets.fromLTRB(5, 5, 5, 5),
+                                  color: Colors.grey,
                                   child: Image.network(
                                     document['imageUrl'],
                                     fit: BoxFit.cover,
@@ -600,15 +643,20 @@ class MyUploads extends StatelessWidget {
                                   width: 20,
                                 ),
                                 Column(
+                                  mainAxisAlignment: MainAxisAlignment.start,
                                   crossAxisAlignment: CrossAxisAlignment.start,
-                  
                                   children: [
-                                Text(
-                                  document['bookTitle'],
-                                  style: const TextStyle(
-                                    fontSize: 20,
-                                    color: Colors.black,
-                                    fontWeight: FontWeight.bold,
+                                Container(
+                                  width:150 ,
+                                  child: SingleChildScrollView(
+                                    child: Text(
+                                      document['bookTitle'],
+                                      style: const TextStyle(
+                                        fontSize: 20,
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
                                   ),
                                 ),
                                 Text(
@@ -650,3 +698,153 @@ class MyUploads extends StatelessWidget {
     );
   }
 }
+
+
+class MyWishlist extends StatelessWidget {
+  const MyWishlist({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('My Wishlist'),
+        centerTitle: true,
+          backgroundColor: Colors.brown[400],
+
+      ),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('users')
+            .doc(FirebaseAuth.instance.currentUser!.uid)
+            .collection('wishlist')
+            .snapshots(),
+        builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: LinearProgressIndicator(
+                backgroundColor: Colors.brown,
+          
+              ),
+            );
+          }
+          if (snapshot.data!.docs.length == 0) {
+            return const Center(
+              child: Text('No books in wishlist'),
+            );
+          }
+          for (int i = 0; i < snapshot.data!.docs.length; i++) {
+            print(snapshot.data!.docs[i].id);
+          }
+          
+          return ListView.builder(
+           itemCount: snapshot.data!.docs.length,
+           itemBuilder:  (BuildContext context, int index) {
+              return Material(
+                elevation: 5,
+                child: InkWell(
+                  child: Container(
+                    margin: const EdgeInsets.only(top: 5.0),
+                      height: 150,
+                      padding: const EdgeInsets.all(5.0),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10.0),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.5),
+                            spreadRadius: 5,
+                            blurRadius: 7,
+                            offset: Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: Dismissible(
+                        key: Key(snapshot.data!.docs[index].id), // Unique key for Dismissible widget
+                        direction: DismissDirection.startToEnd, // Swipe direction
+                        onDismissed: (direction) {
+                          // Delete the book from the wishlist
+                          deleteData('users/${FirebaseAuth.instance.currentUser!.uid}/wishlist', snapshot.data!.docs[index].id);
+                        },
+                        background: Container(
+                          alignment: Alignment.centerLeft,
+                          padding: EdgeInsets.only(left: 20.0),
+                          color: Colors.red[400],
+                          child: const Icon(Icons.delete, color: Colors.white),
+                        ),
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                               
+                                const SizedBox(
+                                  width: 20,
+                                ),
+                                Column(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                Container(
+                                  width:150 ,
+                                  child: SingleChildScrollView(
+                                    child: FutureBuilder<dynamic>(
+                                      future: getBookDetails(snapshot.data!.docs[index].id),
+                                      builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                                        if (snapshot.connectionState == ConnectionState.waiting) {
+                                          return const Text('Loading...');
+                                        }
+                                        return ListTile(
+                                           
+                                          title: Text(
+                                            snapshot.data['bookTitle'],
+                                            style: const TextStyle(
+                                              fontSize: 20,
+                                              color: Colors.black,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          subtitle: Text(
+                                            snapshot.data['bookAuthor'],
+                                            style: const TextStyle(
+                                              fontSize: 15,
+                                              color: Colors.grey,
+                                            ),
+                                          ),
+                                        );
+                                        
+                                      },
+                                    ),
+                                  ),
+                                ),
+                               
+                                ]),
+                  
+                                //show slide to delete button
+                                const Spacer(),
+                                Text('Swipe to delete', style: TextStyle(color: Colors.red,),
+                                ),
+                                Icon(Icons.arrow_forward_ios, color: Colors.red,)
+                              ],
+                            ),
+                          ],
+                        ),
+                      )),
+                      onTap:  () {
+                        //navigate to book details page
+                        navigatorKey.currentState!.push(MaterialPageRoute(builder: (context) {
+                          return Book(bid: snapshot.data!.docs[index].id);
+                        }));
+                      },
+                ),
+              );
+
+                                
+            
+        },
+          );
+        },
+      ),
+      bottomNavigationBar: bottomAppBar(),
+    );
+  }
+}
+

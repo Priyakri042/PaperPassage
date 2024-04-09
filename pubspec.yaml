@@ -63,6 +63,7 @@ dependencies:
   flutter_pay_upi: ^0.2.1
   bubble: ^1.2.1
   sliding_up_panel: ^2.0.0+1
+  google_maps_flutter: ^2.6.0
 
 dev_dependencies:
   flutter_test:
