@@ -10,7 +10,9 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:kitaab/Screens/home_page.dart';
 import 'package:kitaab/Services/auth_services.dart';
 import 'package:kitaab/Services/routes.dart';
+import 'package:kitaab/loading_screen.dart';
 import 'package:kitaab/main.dart';
+import 'package:kitaab/splash_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -61,7 +63,8 @@ class _LoginSignUpPageState extends State<LoginSignUpPage>
         'email': userCredential.user!.email,
       });
     }
-    Navigator.pushReplacementNamed(context, '/home');
+    Navigator.pushReplacement(
+        context, MaterialPageRoute(builder: (context) => LoadingScreen()));
   }
 
   Future<UserCredential> signInWithGoogle() async {
@@ -125,7 +128,7 @@ class _LoginSignUpPageState extends State<LoginSignUpPage>
                                   : Center(
                                     child: Text('Join Us!',
                                         style: TextStyle(
-                                            fontSize: 17, color: Colors.brown[800],fontWeight: FontWeight.bold)),
+                                            fontSize: 17, color: Color(0xFF4E342E),fontWeight: FontWeight.bold)),
                                   ),
                               padding: BubbleEdges.fromLTRB(30, 10, 30, 10),
                               margin: BubbleEdges.only(top: 10),
@@ -276,7 +279,7 @@ class _LoginSignUpPageState extends State<LoginSignUpPage>
                                   Navigator.pushReplacement(
                                       context,
                                       MaterialPageRoute(
-                                          builder: (context) => HomePage()));
+                                          builder: (context) => LoadingScreen()));
                                 } else {
                                   print('error:' + result.toString());
                                   ScaffoldMessenger.of(context)
@@ -303,7 +306,7 @@ class _LoginSignUpPageState extends State<LoginSignUpPage>
                                   Navigator.pushReplacement(
                                       context,
                                       MaterialPageRoute(
-                                          builder: (context) => HomePage()));
+                                          builder: (context) => LoadingScreen()));
                                 } else {
                                   print('error:' + result.toString());
                                   ScaffoldMessenger.of(context)
@@ -338,7 +341,7 @@ class _LoginSignUpPageState extends State<LoginSignUpPage>
                           : Text('Already have an account? Sign in',
                               style: TextStyle(color: Colors.brown[800],fontWeight: FontWeight.bold)),
                     ),
-                    Text('or', style: TextStyle(color: Colors.brown[800],fontWeight: FontWeight.bold)),
+                    Text('or', style: TextStyle(color: Color(0xFF4E342E),fontWeight: FontWeight.bold)),
                     Container(
                       width: double.infinity,
                       child: ElevatedButton(

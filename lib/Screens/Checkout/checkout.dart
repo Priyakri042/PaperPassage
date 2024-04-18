@@ -42,7 +42,7 @@ class _CheckoutState extends State<Checkout> {
 
   Future<void> _onStepContinue() async {
     if (_currentStep < _stepStates.length) {
-      if (_currentStep == 0 || _currentStep == 1) {
+      if (_currentStep == 0 ) {
         setState(() {
           _stepStates[_currentStep] = StepState.indexed;
           _currentStep++;

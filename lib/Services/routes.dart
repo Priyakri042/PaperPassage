@@ -12,6 +12,7 @@ import 'package:kitaab/Screens/Checkout/checkout.dart';
 import 'package:kitaab/Screens/home_page.dart';
 import 'package:kitaab/Screens/landing_page.dart';
 import 'package:kitaab/Screens/login.dart';
+import 'package:kitaab/splash_screen.dart';
 
 MaterialPageRoute? generateRoute(RouteSettings settings) {
   switch (settings.name) {
@@ -45,6 +46,7 @@ MaterialPageRoute? generateRoute(RouteSettings settings) {
 
       case '/notifications':
       return MaterialPageRoute(builder: (context) => NotificationPage());
+
       
     default:
        return null;

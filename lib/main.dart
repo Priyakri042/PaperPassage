@@ -2,8 +2,11 @@ import 'dart:async';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:kitaab/Screens/home_page.dart';
+import 'package:kitaab/Screens/login.dart';
 import 'package:kitaab/Services/routes.dart';
 import 'package:kitaab/Services/theme_provider.dart';
+import 'package:kitaab/splash_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -39,11 +42,16 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      //diable lauch screen
+      
       theme: Provider.of<ThemeProvider>(context).currentTheme,
       navigatorKey: navigatorKey,
       scaffoldMessengerKey: ScaffoldMessengerKey,
-      initialRoute: isFreshUser?'/landing' : isLoggedIn ? '/home' : '/login',
+      home: SplashScreen(isLoggedIn: isLoggedIn, isFreshUser: isFreshUser),
       onGenerateRoute: generateRoute,
+      
+
+    
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'dart:ffi';
 import 'dart:io';
 import 'package:flutter/cupertino.dart';
+import 'package:kitaab/Screens/home_page.dart';
 import 'package:kitaab/Services/database_services.dart';
 import 'package:kitaab/main.dart';
 import 'package:path/path.dart' as Path;
@@ -35,12 +36,14 @@ class _AddBookState extends State<AddBook> {
   
   late int stock = 0;
 
-  
+  ValueNotifier<bool> isUploading = ValueNotifier<bool>(false);
 
   Future<String> uploadImage(File imageFile) async {
+     isUploading.value = true;
     String userId = FirebaseAuth.instance.currentUser!.uid;
 
     // Create a reference to the location you want to upload to in Firebase Storage
+    
     Reference storageReference = FirebaseStorage.instance
         .ref()
         .child('books/$userId/${Path.basename(imageFile.path)}');
@@ -51,7 +54,8 @@ class _AddBookState extends State<AddBook> {
     // Get the download URL
     TaskSnapshot taskSnapshot = await uploadTask;
     String downloadUrl = await taskSnapshot.ref.getDownloadURL();
-
+  
+  isUploading.value = false;
     return downloadUrl;
   }
 
@@ -248,12 +252,13 @@ class _AddBookState extends State<AddBook> {
                               keyboardType: TextInputType.number,
                               validator: (value) {
                                 if (value!.isEmpty || int.parse(value) < 1) {
-                                  setState(() {
+                                 
+                                  return 'Please enter your stock ';
+                                }
+                                 setState(() {
                                     
                                   stock =  int.parse(value);
                                   });
-                                  return 'Please enter your stock ';
-                                }
                                 return null;
                               },
                             ),
@@ -440,8 +445,14 @@ class _AddBookState extends State<AddBook> {
                               
                             
                           }
-                          Navigator.pushNamed(context, '/home');
-                        }
+                           //go to home page
+
+                           
+                           
+                           navigatorKey.currentState!.pushReplacementNamed('/home');
+                           
+                          }
+                          
                         },
                         //decorating the button
                         //height of button
@@ -471,6 +482,23 @@ class _AddBookState extends State<AddBook> {
         ),
         bottomNavigationBar: bottomAppBar(),
       ),
+    );
+  }
+  ValueListenableBuilder<bool> bottomAppBar() {
+    return ValueListenableBuilder<bool>(
+      valueListenable: isUploading,
+      builder: (context, value, child) {
+        return BottomAppBar(
+          height: 30,
+          child: value
+              ? LinearProgressIndicator(
+        
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+                  
+                )
+              : null,
+        );
+      },
     );
   }
 }
