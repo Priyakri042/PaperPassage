@@ -130,6 +130,7 @@ class _SettingsState extends State<Settings> {
             //show profile details
             Column(
           children: [
+            getUploadStatus(),
             Card(
               elevation: 5,
               shadowColor:            Colors.brown[200],
@@ -288,6 +289,9 @@ class _SettingsState extends State<Settings> {
               ),
             ),
             //change email,change phone number,theme,location,change password,logout
+            SingleChildScrollView(
+              child: Column(
+                children: [
             isEnterEmail
                 ? TextField(
                     decoration: InputDecoration(
@@ -306,7 +310,7 @@ class _SettingsState extends State<Settings> {
                             //also update the email in the database
                             updateData({
                               'email': _emailController.text,
-                            }, 'users', prefs.getString('userId')!);
+                            }, 'users', auth.currentUser!.uid);
                           });
                         },
                       ),
@@ -407,6 +411,7 @@ class _SettingsState extends State<Settings> {
                   return const MyWishlist();
                 }));
               },
+              trailing: Icon(Icons.bookmark, ),
             ),
             //my uploads
             ListTile(
@@ -428,8 +433,10 @@ class _SettingsState extends State<Settings> {
                     leading: const Icon(Icons.palette),
                     title: const Text('Theme'),
                     trailing: //a sliding bar to change theme
-                        IconButton(
-                      onPressed: () {
+                          Icon(
+                        Icons.brightness_4_outlined,
+                      ),
+                      onTap: () {
                         final themeProvider =
                             Provider.of<ThemeProvider>(context, listen: false);
                         setState(() {
@@ -440,17 +447,16 @@ class _SettingsState extends State<Settings> {
                             ? themeProvider.setDarkmode()
                             : themeProvider.setLightMode();
                       },
-                      icon:  Icon(
-                        Icons.brightness_4_outlined,
-                      ),
-                    ),
+                    
                   )
                 : ListTile(
                     leading: const Icon(Icons.palette),
                     title: const Text('Theme'),
                     trailing: //a sliding bar to change theme
-                        IconButton(
-                      onPressed: () {
+                        Icon(
+                        Icons.brightness_4_outlined,
+                      ),
+                    onTap: () {
                         final themeProvider =
                             Provider.of<ThemeProvider>(context, listen: false);
                         setState(() {
@@ -461,10 +467,6 @@ class _SettingsState extends State<Settings> {
                             ? themeProvider.setDarkmode()
                             : themeProvider.setLightMode();
                       },
-                      icon:  Icon(
-                        Icons.brightness_4_outlined,
-                      ),
-                    ),
                   ),
             isEnterLocation
                 ? TextField(
@@ -553,6 +555,9 @@ class _SettingsState extends State<Settings> {
                 Navigator.pushNamed(context, '/login');
                 //navigate to logout page
               },
+            ),
+                ],
+              ),
             ),
           ],
         ),

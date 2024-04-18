@@ -34,9 +34,12 @@ Future<QuerySnapshot> fetchData(String collection) async {
 //upload profile image
 FirebaseStorage storage = FirebaseStorage.instance;
 //Create a reference to the location you want to upload to in firebase
+ 
+  ValueNotifier<bool> isUploading = ValueNotifier<bool>(false);
 
 Future<void> uploadProfileImage(File imageFile, String userId) async {
   // Read the image
+  isUploading.value = true;
   img.Image? image = img.decodeImage(imageFile.readAsBytesSync());
 
   // Convert the image to jpg
@@ -59,11 +62,28 @@ Future<void> uploadProfileImage(File imageFile, String userId) async {
       .update({'profileImageUrl': downloadUrl});
 
     // prefs.setString('profileImageUrl', downloadUrl);
+    isUploading.value = false;
+}
+
+ValueListenableBuilder<bool> getUploadStatus() {
+  return ValueListenableBuilder(
+    valueListenable: isUploading,
+    builder: (context, value, child) {
+      return value
+          ? Center(
+              child: LinearProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.brown),
+              ),
+            )
+          : Container();
+    },
+  );
 }
 
 //book details
 
 void addBook(
+  
   String uid,
   String bid,
   String bookTitle,
