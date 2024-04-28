@@ -11,23 +11,23 @@ The Flutter Firebase project described in this paper not only caters to individu
 # Functions:
 
 # Authentication
-The system shall incorporate robust user authentication mechanisms utilizing Firebase Authentication. Users shall be provided with options to register, log in, and log out securely. During the registration process, users will be required to provide a valid email address and create a password. Additionally, the system shall support authentication via social media accounts such as Google.
+The system shall incorporate robust user authentication mechanisms utilizing Firebase Authentication. Users shall be provided with options to register, log in, and log out securely. During the registration process, users will be required to provide a valid email address and create a password. Additionally, the system shall support authentication via social media accounts such as Google
 ![image](https://github.com/Priyakri042/PaperPassage/assets/158018320/038c9c6e-c746-4ad4-939c-75adac90d441)
 
 # Add Book
-Users shall be empowered to contribute to the platform's book inventory by adding new listings. To add a book, users will need to furnish comprehensive details including the title, author's name, genre classification, a descriptive summary, the current condition of the book, pricing information, and high-quality images portraying the book's cover and relevant content.
+Users shall be empowered to contribute to the platform's book inventory by adding new listings. To add a book, users will need to furnish comprehensive details including the title, author's name, genre classification, a descriptive summary, the current condition of the book, pricing information, and high-quality images portraying the book's cover and relevant content
 ![image](https://github.com/Priyakri042/PaperPassage/assets/158018320/0009a836-c266-4755-b791-0b1f1f2ce6e1)
 
 # Sell or Rent Book
-The platform shall accommodate two primary transactional modes: selling and renting books. Sellers shall have the autonomy to determine whether they intend to sell their listed books outright or offer them for rental purposes. In the case of rental listings, users shall have the option to specify the duration for which the book is available for rent along with the corresponding rental fee.
+The platform shall accommodate two primary transactional modes: selling and renting books. Sellers shall have the autonomy to determine whether they intend to sell their listed books outright or offer them for rental purposes. In the case of rental listings, users shall have the option to specify the duration for which the book is available for rent along with the corresponding rental fee
 ![image](https://github.com/Priyakri042/PaperPassage/assets/158018320/b543f1aa-ee91-449f-8747-4dcb7327568b)
 
 # Cart
-The system shall feature a user-centric cart management system to facilitate a seamless shopping experience. Users shall be able to add desired books to their cart for subsequent purchase or rental. Additionally, users shall have the capability to view the contents of their cart, make modifications such as removing items, and proceed to checkout.
+The system shall feature a user-centric cart management system to facilitate a seamless shopping experience. Users shall be able to add desired books to their cart for subsequent purchase or rental. Additionally, users shall have the capability to view the contents of their cart, make modifications such as removing items, and proceed to checkout
 ![image](https://github.com/Priyakri042/PaperPassage/assets/158018320/7de92a70-e5cf-41a3-ae98-c454e369297c)
 
 # Checkout Page
-Upon finalizing their selections, users shall be directed to a dedicated checkout page where they can review the items in their cart, verify pricing details, and select their preferred payment method. The checkout process shall be designed to guide users through the transaction securely, providing reassurance and transparency at each stage.
+Upon finalizing their selections, users shall be directed to a dedicated checkout page where they can review the items in their cart, verify pricing details, and select their preferred payment method. The checkout process shall be designed to guide users through the transaction securely, providing reassurance and transparency at each stage
 ![image](https://github.com/Priyakri042/PaperPassage/assets/158018320/e5137287-8df2-4245-afec-1f43c47e8db7)
 
 # Dark Mode
