@@ -12,6 +12,8 @@ The Flutter Firebase project described in this paper not only caters to individu
 
 # Authentication
 The system shall incorporate robust user authentication mechanisms utilizing Firebase Authentication. Users shall be provided with options to register, log in, and log out securely. During the registration process, users will be required to provide a valid email address and create a password. Additionally, the system shall support authentication via social media accounts such as Google
+
+
 ![image](https://github.com/Priyakri042/PaperPassage/assets/158018320/53b66e0a-809c-4dc6-afed-5a694bc96cd1)
 
 
